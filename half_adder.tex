@@ -96,11 +96,11 @@ Note that this probability distribution reduces to point functions for $\alpha =
 
 \paragraph{Noisy Addition} Given the logic circuit design in Figure \ref{fig:half-adder}, we can now compute the marginal distribution over the sum bit $s$ and the carry bit $c$ by summing over all possible values of $d$ and $e$ using the probability distributions given above. More formally, we have 
 \begin{align}
-    P(s,c|a,b) & = \sum_{i=0}^1 \sum_{j=0}^1 P(s,c|e=i,d=j,a,b)\cdot P(e=i,d=j|a,b) \\
-    & = \sum_{i=0}^1 \sum_{j=0}^1 P(s|e=i,d=j)\cdot P(c|a,b) \cdot P(e=i,d=j|a,b) \\
-    & = P(c|a,b) \cdot \sum_{i=0}^1 \sum_{j=0}^1 P(s|e=i,d=j) \cdot P(e=i|c) \cdot P(d=j|a,b) \,,
+    P(s,c|a,b) & = \sum_{i=0}^1 \sum_{j=0}^1 P(s,c,d=j,e=i|a,b) \\
+    & = \sum_{i=0}^1 \sum_{j=0}^1 P(c|a,b) P(d=j|a,b) P(e=i|c) P(s|d=j,e=i) \\
+    & = P(c|a,b) \cdot \sum_{i=0}^1 \sum_{j=0}^1 P(e=i|c) P(d=j|a,b) P(s|e=i,d=j) \,,
 \end{align}
-where the second line follows from the fact that $s$ is independent of $a$, $b$ and $c$ given the state of bit $d$ and $e$, and the third line follows from the fact that $e$ is independent of $a$ and $b$ given the state of the bit $c$. Note that even this simple model already results in a polynomial of degree 4 in both $\alpha$ and $\beta$ (or up to degree 7 for some of the cases). In Figure \ref{fig:noise_prob_dist} we have shown how the resulting distributions vary as functions of $\alpha$ and $\beta$.
+where the first line follows from the law of total probability, the second line follows from the directed graphical network structure $P(s,c,d,e|a,b)=P(c|a,b)P(d|a,b)P(e|c)P(s|d,e)$, and the third line follows from noticing that $P(c|a,b)$ does not depend on the value of $e$ and $d$. Note that even this simple model already results in a polynomial of degree 4 in both $\alpha$ and $\beta$ (or up to degree 7 for some of the cases). In Figure \ref{fig:noise_prob_dist} we have shown how the resulting distributions vary as functions of $\alpha$ and $\beta$.
 \begin{figure}
     \begin{tabular}{ccc}
         \includegraphics[width=.3\textwidth]{media/noisy_half_adder_value_dist_00.eps} &
@@ -111,4 +111,56 @@ where the second line follows from the fact that $s$ is independent of $a$, $b$ 
         \includegraphics[width=.3\textwidth]{media/noisy_half_adder_value_full_dist_11.png} \\        
     \end{tabular}
     \caption{Probability distribution for $P(s,c|a,b)$ for the three different cases of $a=0, b=0$ (left), $a=0, b=1$ (middle) and $a=1, b=1$ (right), respectively. {\bf Top row:} The graphs show the change of the probability distributions as $\beta$ in (\ref{eq:bit_flip_to_0}) varies from $0$ to $\frac{1}{2}$ and $\alpha = 0$; this case is equivalent to assuming there is only leakage of information due to low-voltage. Note that the errors are not distributed based on the numerical distance of the results, e.g.\ for $\beta=40\%$ the sum of $a=b=1$ is $2$ with probability $\approx 30\%$, $1$ with probability $\approx 20\%$ but $0$ with probability $\approx 45\%$. \label{fig:noise_prob_dist}. {\bf Bottom row:} The 3D graphs show the change of the probability distributions as both $\alpha$ in (\ref{eq:bit_flip_to_1}) and $\beta$ in (\ref{eq:bit_flip_to_0}) varies from $0$ to $\frac{1}{2}$.}
+\end{figure}
+
+
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        % Circuit style
+        \ctikzset{
+            logic ports=ieee,
+            logic ports/scale=0.8,
+            % logic ports/fill=lightgray
+        }
+
+        % Logic ports
+        \node[or port] (OR) at (0,0){};
+        \node[and port] (ANDa1) at (0,-2){};
+        \node[and port] (ANDa2) at (0,-4){};
+        \node[or port] (OR2) at (2,-3){};
+        \node[not port] (NOT) at (4,-3){};
+        \node[and port] (ANDb) at (6,-1.5){};
+
+        % Input and output ports
+        \node (a) at (-2,-1) [left] {$a$};
+        \node (b) at (-2,-3) [left] {$b$};
+        \node (c) at (7,-4) [right] {$c$};
+        \node (c1) at (0.8,-2) [above] {$c_1$};
+        \node (c2) at (0.8,-4) [above] {$c_2$};
+        \node (d) at (1,0) [above] {$d$};
+        \node (e) at (4.8,-3) [above] {$e$};
+        \node (s) at (7,-1.5) [right] {$s$};
+        \node (af) [right = 0.5 of a, coordinate] [left] {};
+        \node (bf) [right = 1 of b, coordinate] [left] {};
+        \node (cf) at (3,-3) [coordinate] {};
+
+        % % Connection
+        \draw (ANDa1.out) -| (OR2.in 1);
+        \draw (ANDa2.out) -| (OR2.in 2);
+        \draw (OR2.out) -- (NOT.in);
+        \draw (OR.out) -| (ANDb.in 1);
+        \draw (NOT.out) -| (ANDb.in 2);
+
+        \draw (ANDb.out) -* (s);
+        \draw (OR.in 1) -| (af) |- (ANDa1.in 1);
+        \draw (OR.in 1) -| (af) |- (ANDa2.in 1);
+        \draw (OR.in 2) -| (bf) |- (ANDa2.in 2);
+        \draw (OR.in 2) -| (bf) |- (ANDa1.in 2);
+        \draw (a) -- (af);
+        \draw (b) -- (bf);
+        \draw (cf) |- (c);
+    \end{tikzpicture}
+    \caption{Logic circuit design of a half-adder function with carry-bit redundancy that computes the sum of two binary numbers $a \in \{0,1\}$ and $b \in \{0,1\}$ where $s$ is the sum of $a$ and $b$ and $c$ captures the carry-bit indicating an overflow (i.e., if $a$ and $b$ are both $1$, then $s=0$ and $c=1$). \label{fig:half-adder-fix-carry-bit-redundancy}}
 \end{figure}
