@@ -32,25 +32,26 @@ def pnot(alpha,beta):
         1: { 0: 1-beta, 1: beta } 
     } 
 
-def safe_by_or(f_map,or_map):
-    """Computes the distribution of the output of a AND/OR function which has been made safe by replication and redundancy resolution via a probabilistic OR"""
+def safe_by_combine(f_map,combine_map):
+    """Computes the distribution of the output of a single-valued logic gate which 
+    has been made safe by replication and redundancy resolution via a probabilistic OR"""
     return  {k: { 
-                    0:  f_map[k][0]*f_map[k][0]*or_map[(0,0)][0] + 
-                        f_map[k][0]*f_map[k][1]*or_map[(0,1)][0] + 
-                        f_map[k][1]*f_map[k][0]*or_map[(1,0)][0] + 
-                        f_map[k][1]*f_map[k][1]*or_map[(1,1)][0],
-                    1:  f_map[k][0]*f_map[k][0]*or_map[(0,0)][1] + 
-                        f_map[k][0]*f_map[k][1]*or_map[(0,1)][1] + 
-                        f_map[k][1]*f_map[k][0]*or_map[(1,0)][1] + 
-                        f_map[k][1]*f_map[k][1]*or_map[(1,1)][1]
+                    0:  v[0]*v[0]*combine_map[(0,0)][0] + 
+                        v[0]*v[1]*combine_map[(0,1)][0] + 
+                        v[1]*v[0]*combine_map[(1,0)][0] + 
+                        v[1]*v[1]*combine_map[(1,1)][0],
+                    1:  v[0]*v[0]*combine_map[(0,0)][1] + 
+                        v[0]*v[1]*combine_map[(0,1)][1] + 
+                        v[1]*v[0]*combine_map[(1,0)][1] + 
+                        v[1]*v[1]*combine_map[(1,1)][1]
                } for k, v in f_map.items()
             }
 
-def recursive_safe(f_map,or_map,n):
-    """Applies the save_by_or function recursively to reduce the error rate of the noise AND and ORs"""
+def recursive_safe(f_map,combine_map,n):
+    """Applies the save_by_combine function recursively to reduce the error rate of the noisy AND, OR or NOT"""
     f_out = f_map
     for i in range(n):
-        f_out = safe_by_or(f_out,or_map)
+        f_out = safe_by_combine(f_out,combine_map)
     return f_out
 
 def half_adder(and1_map,and2_map,not_map,or_map):
@@ -123,23 +124,40 @@ def four_bit_adder(ha_map,fa1_map,fa2_map,fa3_map):
                                     out[k] = v
     return(out)
 
-def plot_basic_logic(d=8):
+# def plot_basic_logic(alpha=0,d=8):
+#     """Plots the probability distributions of basic logic functions"""
+#     beta = np.linspace(0, 0.5, 100)
+#     plt.plot(beta, [por(alpha,b)[(0,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
+#     plt.plot(beta, [por(alpha,b)[(0,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='blue')
+#     plt.plot(beta, [por(alpha,b)[(1,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='green')
+#     plt.plot(beta, [por(alpha,b)[(1,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
+
+#     plt.plot(beta, [recursive_safe(por(alpha,b),por(alpha,b),d)[(0,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
+#     plt.plot(beta, [recursive_safe(por(alpha,b),por(alpha,b),d)[(0,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='blue')
+#     plt.plot(beta, [recursive_safe(por(alpha,b),por(alpha,b),d)[(1,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='green')
+#     plt.plot(beta, [recursive_safe(por(alpha,b),por(alpha,b),d)[(1,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
+
+#     plt.legend(['P(or=1|a=0,b=0)', 'P(or=1|a=0,b=1)', 'P(or=1|a=1,b=0)', 'P(or=1|a=1,b=1)'])
+#     plt.xlabel(r'$\beta$')
+#     plt.ylabel('P(or=1|a,b)')
+#     plt.title('Probability Distribution of OR with {0}-redundancy'.format(d))
+
+#     plt.grid()
+#     plt.show()
+
+def plot_basic_logic(alpha=0,d=1):
     """Plots the probability distributions of basic logic functions"""
     beta = np.linspace(0, 0.5, 100)
-    plt.plot(beta, [pand(0,b)[(0,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
-    plt.plot(beta, [pand(0,b)[(0,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='blue')
-    plt.plot(beta, [pand(0,b)[(1,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='green')
-    plt.plot(beta, [pand(0,b)[(1,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
+    plt.plot(beta, [pnot(alpha,b)[0][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
+    plt.plot(beta, [pnot(alpha,b)[1][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
 
-    plt.plot(beta, [recursive_safe(pand(0,b),por(0,b),d)[(0,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
-    plt.plot(beta, [recursive_safe(pand(0,b),por(0,b),d)[(0,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='blue')
-    plt.plot(beta, [recursive_safe(pand(0,b),por(0,b),d)[(1,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='green')
-    plt.plot(beta, [recursive_safe(pand(0,b),por(0,b),d)[(1,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
+    plt.plot(beta, [recursive_safe(pnot(alpha,b),pand(alpha,b),d)[0][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
+    plt.plot(beta, [recursive_safe(pnot(alpha,b),pand(alpha,b),d)[1][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
 
-    plt.legend(['P(and=1|a=0,b=0)', 'P(and=1|a=0,b=1)', 'P(and=1|a=1,b=0)', 'P(and=1|a=1,b=1)'])
+    plt.legend(['P(not=1|a=0)', 'P(not=1|a=1)'])
     plt.xlabel(r'$\beta$')
-    plt.ylabel('P(and=1|a,b)')
-    plt.title('Probability Distribution of AND with k-redundancy')
+    plt.ylabel('P(not=1|a)')
+    plt.title('Probability Distribution of NOT with {0}-redundancy'.format(d))
 
     plt.grid()
     plt.show()
@@ -293,10 +311,7 @@ def check_distribution(p_map = full_adder(half_adder(pand(0,0),pand(0,0),pnot(0,
 # plot_half_adder()
 # plot_full_adder(inp=(0,0,1))
 # plot_4bit_adder(alpha=0)
-plot_4bit_adder_dist(alpha=0,beta=0.05, d=2)
+plot_4bit_adder_dist(alpha=0,beta=0.01, d=3)
 
-# print_distribution(fb_map)
-# check_distribution(fb_map)
-
-
-
+# print_distribution()
+# check_distribution()
