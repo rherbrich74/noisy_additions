@@ -1,4 +1,4 @@
-# noise_addition.py         A set of functions to compute the output probabilities of 
+# noisy_addition.py         A set of functions to compute the output probabilities of 
 #                           noisy half- and full-adders
 #
 # 2022 written by Ralf Herbrich
@@ -90,6 +90,38 @@ def full_adder(ha1_map,ha2_map,or_map):
                       v[kv] = p
                 out[k] = v
     return out
+
+def four_bit_adder(ha_map,fa1_map,fa2_map,fa3_map):
+    """Computes the distribution of the output of a 4-bit adder"""
+    out = {}
+    for a0 in [0,1]:
+        for a1 in [0,1]:
+            for a2 in [0,1]:
+                for a3 in [0,1]:
+                    for b0 in [0,1]:
+                        for b1 in [0,1]:
+                            for b2 in [0,1]:
+                                for b3 in [0,1]:
+                                    k = (a0,a1,a2,a3,b0,b1,b2,b3)
+                                    v = {}
+                                    for s0 in [0,1]:
+                                        for s1 in [0,1]:
+                                            for s2 in [0,1]:
+                                                for s3 in [0,1]:
+                                                    for c3_out in [0,1]:
+                                                        kv = (s0,s1,s2,s3,c3_out)
+                                                        p = 0
+                                                        for c0_out in [0,1]:
+                                                            for c1_out in [0,1]:
+                                                                for c2_out in [0,1]:
+                                                                    p = p + \
+                                                                        ha_map[(a0,b0)][(s0,c0_out)] * \
+                                                                        fa1_map[(a1,b1,c0_out)][(s1,c1_out)] * \
+                                                                        fa2_map[(a2,b2,c1_out)][(s2,c2_out)] * \
+                                                                        fa3_map[(a3,b3,c2_out)][(s3,c3_out)]
+                                                        v[kv] = p
+                                    out[k] = v
+    return(out)
 
 def plot_basic_logic(d=8):
     """Plots the probability distributions of basic logic functions"""
@@ -188,6 +220,21 @@ def plot_full_adder(inp=(1,1,0),d=8):
     plt.grid()
     plt.show()
 
+def plot_4bit_adder(alpha = 0.05, beta = 0.05, a = 3, b = 7):
+    ha_map = half_adder(pand(alpha,beta),pand(alpha,beta),pnot(alpha,beta),por(alpha,beta))
+    fa_map = full_adder(ha_map, ha_map, por(alpha,beta))
+    fb_map = four_bit_adder(ha_map,fa_map,fa_map,fa_map)
+
+    key = (a & 1, (a>>1) & 1, (a>>2) & 1, (a>>3) & 1,b & 1, (b>>1) & 1, (b>>2) & 1, (b>>3) & 1)
+    hist = dict(sorted({ c4*16+c3*8+c2*4+c1*2+c0: v for ((c0,c1,c2,c3,c4),v) in fb_map[key].items() }.items()))
+
+    plt.bar(hist.keys(), hist.values())
+    plt.xlabel(r'sum')
+    plt.ylabel('P(sum|a={0},b={1})'.format(a,b))
+    plt.title(r'Probability Distribution over sum of {0} and {1} ($\alpha$={2},$\beta$={3})'.format(a,b,alpha,beta))
+    plt.show()
+
+
 def print_distribution(p_map = full_adder(half_adder(pand(0,0),pand(0,0),pnot(0,0),por(0,0)),
                                           half_adder(pand(0,0),pand(0,0),pnot(0,0),por(0,0)),
                                           por(0,0))):
@@ -204,9 +251,13 @@ def check_distribution(p_map = full_adder(half_adder(pand(0,0),pand(0,0),pnot(0,
             exit()
     print("ok")
 
-plot_basic_logic()
-plot_half_adder()
-plot_full_adder()
+# plot_basic_logic()
+# plot_half_adder()
+# plot_full_adder()
+plot_4bit_adder()
 
-print_distribution()
-check_distribution()
+# print_distribution(fb_map)
+# check_distribution(fb_map)
+
+
+
