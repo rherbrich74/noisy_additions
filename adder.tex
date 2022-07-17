@@ -1,0 +1,145 @@
+\label{sec:adders}
+Every computer is an electric device which changes the state of its memory (i.e., randomly-accessible memory (RAM) or on-chip memory also referred to as {\em registers}) in response to the execution of instructions provided to the computer through RAM. The change of the state is performed by a unit called the {\em arithmetic logic unit} (ALU) which implements at the very least $n$-bit addition, bit-wise logic operations (i.e., AND, OR, NOT) as well as bit-wise shift operations\footnote{Computer architecture differs in the range of instructions is supports in hardware---the so-called instruction set architecture (ISA)---as well as the way that some operations are supported on RAM or only on registers.}. Note that the instructions themselves are part of the state of the computer and that the program flow through this state is handled by using the ALU on a special register called the {\em program counter} (always pointing to the location in RAM where the current instruction is contained). Thus, the ALU is the most central component that allows any computer to perform all its tasks.
+
+We will focus on one operation of the ALU that is central to all operations namely {\em addition}. Depending on the native bandwidth of the CPU, this includes the addition of two $4$-, $8$-, $16$-, $32$- or even $64$-bit numbers provided in registers. As each number is represented by bits, we will denote the two inputs to addition $A=a_0a_1a_2a_3\cdots a_n$ and $B=b_0b_1b_2b_3\cdots b_n$, respectively. The addition of $A$ and $B$ is performed in a pipeline $n$ steps:
+\begin{enumerate}
+    \item {\bf Half-Adder}. First, $a_0$ and $b_0$ get added according to the rules of binary addition resulting in a sum bit $s_0$ as well as a carry-out bit $\cout^0$.
+    \item {\bf Full-Adder}. Second, $a_1$, $b_1$ and $\cout^0$ get added according to the rules of binary addition with a carry-in bit $\cin^1=\cout^0$ resulting in the sum bit $s_1$ as well as the carry-out bit $\cout^1$.
+    \item {\bf Ripple-Carry Adder}. This sequence is repeated until the $n$th position given the bit string $s_0s_1s_2s_3\cdots s_n\cout^n$ which is the $(n+1)$-bit answer of the addition of $A$ and $B$.
+\end{enumerate}
+
+\begin{figure}
+    \begin{tabular}{cc}
+        \begin{minipage}[c]{.45\linewidth}
+            \centering
+            \begin{tikzpicture}
+                % Circuit style
+                \ctikzset{
+                    logic ports=ieee,
+                    logic ports/scale=0.8,
+                    % logic ports/fill=lightgray
+                }
+
+                % Logic ports
+                \node[or port] (OR) at (0,0){};
+                \node[and port] (ANDa) at (0,-3){};
+                \node[not port] (NOT) at (2,-3){};
+                \node[and port] (ANDb) at (4,-1.5){};
+
+                % Input and output ports
+                \node (a) at (-2,-1) [left] {$a$};
+                \node (b) at (-2,-2) [left] {$b$};
+                \node (c1) at (1,-3) [above] {$\cout$};
+                \node (d) at (1,0) [above] {$d$};
+                \node (e) at (2.8,-3) [above] {$e$};
+                \node (s) at (5,-1.5) [right] {$s$};
+                \node (c2) at (5,-4) [right] {$\cout$};
+                \node (af) [right = 0.5 of a, coordinate] [left] {};
+                \node (bf) [right = 1 of b, coordinate] [left] {};
+
+                % % Connection
+                \draw (ANDa.out) -- (NOT.in);
+                \draw (OR.out) -| (ANDb.in 1);
+                \draw (NOT.out) -| (ANDb.in 2);
+
+                \draw (ANDb.out) -* (s);
+                \draw (OR.in 1) -| (af) |- (ANDa.in 2);
+                \draw (OR.in 2) -| (bf) |- (ANDa.in 1);
+                \draw (a) -- (af);
+                \draw (b) -- (bf);
+                \draw (c1) |- (c2);
+            \end{tikzpicture}
+        \end{minipage} &
+        \begin{minipage}[c]{.5\linewidth}
+            \centering
+            \begin{tabular}{c|c||c|c|c|c}
+                $a$ & $b$ & $d$ & $e$ & $s$ & $\cout$ \\
+                \hline
+                $0$ & $0$ & $0$ & $1$ & $0$ & $0$     \\
+                $0$ & $1$ & $1$ & $1$ & $1$ & $0$     \\
+                $1$ & $0$ & $1$ & $1$ & $1$ & $0$     \\
+                $1$ & $1$ & $1$ & $0$ & $0$ & $1$     \\
+            \end{tabular}
+        \end{minipage}  \\
+        \begin{minipage}[c]{.45\linewidth}
+            \centering
+            \begin{tikzpicture}
+                % Circuit style
+                \ctikzset{
+                    logic ports=ieee,
+                    logic ports/scale=0.8,
+                    % logic ports/fill=lightgray
+                }
+
+                % Logic ports
+                \node[draw,minimum width=1.5cm,minimum height=2cm] (HA1) at (0,-1.2){HA$_1$}
+                ($(HA1.west)!0.6!(HA1.north west)$) ++(-0.25,0) coordinate (HA1in1)
+                ($(HA1.west)!0.6!(HA1.south west)$) ++(-0.25,0) coordinate (HA1in2)
+                ($(HA1.east)!0.6!(HA1.north east)$) ++(0.25,0) coordinate (HA1out1)
+                ($(HA1.east)!0.6!(HA1.south east)$) ++(0.25,0) coordinate (HA1out2);
+                \node[draw,minimum width=1.5cm,minimum height=2cm] (HA2) at (2.2,0){HA$_2$}
+                ($(HA2.west)!0.6!(HA2.north west)$) ++(-0.25,0) coordinate (HA2in1)
+                ($(HA2.west)!0.6!(HA2.south west)$) ++(-0.25,0) coordinate (HA2in2)
+                ($(HA2.east)!0.6!(HA2.north east)$) ++(0.25,0) coordinate (HA2out1)
+                ($(HA2.east)!0.6!(HA2.south east)$) ++(0.25,0) coordinate (HA2out2);
+                \node[or port] (OR) at (4.5,-1.58){};
+
+                \draw (HA1in1) -- ++(0.25,0);
+                \draw (HA1in2) -- ++(0.25,0);
+                \draw (HA2in1) -- ++(0.25,0);
+                \draw (HA2in2) -- ++(0.25,0);
+                \draw (HA1out1) -- ++(-0.25,0);
+                \draw (HA1out2) -- ++(-0.25,0);
+                \draw (HA2out1) -- ++(-0.25,0);
+                \draw (HA2out2) -- ++(-0.25,0);
+
+                % % Input and output ports
+                \node (a)  [left = 0.25 of HA1in1] [left] {$a$};
+                \node (b)  [left = 0.25 of HA1in2] [left] {$b$};
+                \node (cin)[left = 2.4 of HA2in1] [left] {$\cin$};
+                \node (d) [left = 0.1 of HA2in2] [above] {$d$};
+                \node (e) [left = 0 of OR.in 2] [below] {$e$};
+                \node (f) [left = 0 of OR.in 1] [above] {$f$};
+                \node (s) [right = 2.2 of HA2out1] {$s$};
+                \node (cout) [right = 0 of OR.out] [right] {$\cout$};
+                \node (af) [right = 0.5 of a, coordinate] [left] {};
+                \node (bf) [right = 1 of b, coordinate] [left] {};
+
+                % % % Connection
+                \draw (a) -- (HA1in1);
+                \draw (b) -- (HA1in2);
+                \draw (HA1out1) -- (HA2in2);
+                \draw (cin) -| (HA2in1);
+                \draw (HA2out2) |- (OR.in 1);
+                \draw (HA1out2) |- (OR.in 2);
+                \draw (HA2out1) -- (s);
+            \end{tikzpicture}
+        \end{minipage} &
+        \begin{minipage}[c]{.5\linewidth}
+            \centering
+            \begin{tabular}{c|c|c||c|c|c|c|c}
+                $a$ & $b$ & $\cin$ & $d$ & $e$ & $f$ & $s$ & $\cout$ \\
+                \hline
+                $0$ & $0$ & $0$    & $0$ & $0$ & $0$ & $0$ & $0$     \\
+                $0$ & $1$ & $0$    & $1$ & $0$ & $0$ & $1$ & $0$     \\
+                $1$ & $0$ & $0$    & $1$ & $0$ & $0$ & $1$ & $0$     \\
+                $1$ & $1$ & $0$    & $0$ & $1$ & $0$ & $0$ & $1$     \\
+                $0$ & $0$ & $1$    & $0$ & $0$ & $0$ & $1$ & $0$     \\
+                $0$ & $1$ & $1$    & $1$ & $0$ & $1$ & $0$ & $1$     \\
+                $1$ & $0$ & $1$    & $1$ & $0$ & $1$ & $0$ & $1$     \\
+                $1$ & $1$ & $1$    & $0$ & $1$ & $0$ & $1$ & $1$     \\
+            \end{tabular}
+        \end{minipage}
+    \end{tabular}
+    \caption{{\bf Top Left:} Logic circuit design of a half-adder function that computes the sum of two binary numbers $a \in \{0,1\}$ and $b \in \{0,1\}$ where $s$ is the sum of $a$ and $b$ and $\cout$ captures the carry-bit indicating an overflow (i.e., if $a$ and $b$ are both $1$, then $s=0$ and $\cout=1$). {\bf Top Right:} The logical equivalent of the half-adder with the values for all intermediate results $d \in \{0,1\}$ and $e \in \{0,1\}$ for every possible list of (binary) input values. Note that $s = a \oplus b$ and $\cout = a \land b$. {\bf Bottom Left:} Logic circuit design of a full-adder function that computes the sum of two binary numbers $a \in \{0,1\}$ and $b \in \{0,1\}$ when a carry-in bit $\cin \in \{0,1\}$ is also passed on. {\bf Bottom Right:} The logical equivalent of the full-adder with the values for all intermediate results $d \in \{0,1\}$, $e \in \{0,1\}$ and $f \in \{0,1\}$ for every possible list of the eight (binary) input values. \label{fig:half-and-full-adder}}
+\end{figure}
+
+In Figure \ref{fig:half-and-full-adder} we have shown both the circuit design as well as the logic table for a 1-bit half-adder and full-adder. In terms of logic circuits, the sum bit of the half-adder is nothing more than and XOR of both inputs $a$ and $b$ and the carry-out bit is the logical conjunction of the two inputs. For the full-adder, the sum bit is the XOR of the carry-in bit, $\cin$, and the XOR of both inputs $a$ and $b$; that is, if the carry-in bit is zero, the sum is the same as that of a half-adder but if the carry-in bit is one, the sum is the negation of the sum bit of the half-adder. Similarly, for the full-adder, the carry-out bit, $\cout$ is one if either both inputs $a$ and $b$ are one or if the carry-in bit, $\cin$ is one and at least one of $a$ and $b$ are one. More formally,
+\begin{align}
+    s & = a \oplus b & \cout & = a \land b \\
+    s & = (a \oplus b) \oplus \cin & \cout & = (a \land b) \lor ((a \lor b) \land \cin) \label{eq:full_adder_logic} \,,
+\end{align}
+where the first line is for the half-adder and the second line is for the full-adder, respectively.
+
+Looking at the rule for $\cout$ in (\ref{eq:full_adder_logic}), we can see that $(a \land b) = 1$ is {\em forcing} the carry-out bit $\cout$ to be one---irrespective of the value of $\cin$--- and that $(a \lor b) = 1$ is {\em propagating} the carry-out bit from left to right (i.e., if $\cout = \cin$). One can use these two properties when parallelizing additions over many bits because the individual conjunctions $a_i \land b_i$ do not need to wait for the carry-in bit from the prior positions (which would be required in the ripple-carry adder) and can be computed in parallel; similarly, the individual disjunctions $a_i \lor b_i$ can be computed ahead of time all that needs to happen in sequence is a correction of carry-out flags where the disjunctions were one. This circuit design is faster and is known as a {\em carry-lookahead} adder; however, we will not consider this design here.
+

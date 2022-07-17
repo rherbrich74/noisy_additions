@@ -27,10 +27,14 @@
 \newcommand{\bs}{\boldsymbol{s}}
 \newcommand{\0}{\boldsymbol{0}}
 \newcommand{\1}{\boldsymbol{1}}
+\newcommand{\cout}{c_{\mathrm{out}}}
+\newcommand{\cin}{c_{\mathrm{in}}}
+\newcommand{\ha}{{\mathrm{ha}}}
+\newcommand{\fa}{{\mathrm{fa}}}
 
 \title{On Noisy Additions}
 
-\date{July 11, 2022}		% Here you can change the date presented in the paper title
+\date{July 17, 2022}		% Here you can change the date presented in the paper title
 
 \author{Ralf Herbrich \\
 	Hasso-Plattner Institute\\
@@ -56,7 +60,7 @@ pdfkeywords={electrical circuits, information theory},
 \maketitle
 
 \begin{abstract}
-	Over the past 80 years, most of algorithmic development has relied on the concept of {\em correct computing}, in particular at the level of the basic compute unit: the arithmetic logical unit (ALU). This has led to incredible advancements in the field of computational architecture as well as operating systems and databases. However, with the rapid rise of machine learning (ML) and artificial intelligence (AI) algorithms, this paradigm is no longer strictly required and energy-efficiency takes a more important role. Almost all ML and AI algorithm are based on numerical approximations of (cost) minimization problems and current research into energy-efficient ML/AI focuses on {\em approximate representations} of numbers. In this note, we will explore the idea of {\em approximate computing} starting with the simplest model of approximate additions of two integer numbers.
+	So far, most of algorithmic development has relied on the concept of {\em correct computing}, in particular at the level of the basic compute unit: the arithmetic logical unit (ALU). With the rapid rise of machine learning (ML) and artificial intelligence (AI) systems, {\em correct computing} is no longer strictly required as almost all ML and AI algorithm are based on numerical approximations of (cost) minimization problems. On the other hand, energy-efficiency is becoming increasingly important. While current research into energy-efficient ML/AI focuses on {\em approximate representations} of numbers (e.g., $k$-bit deep neural networks), we will explore the idea of {\em approximate computing} resulting out of under-powering the ALU of a processor. In this note, we will both analytically derive the distribution over integers resulting from under-powering an ALU as well as propose a number of ALU circuit designs which reduce the variation in outputs of an approximate addition. Finally, we will present real-world results of the proposed ALU concept by implementing it on a field-programmable array and comparing it to our analytical results.
 \end{abstract}
 
 
@@ -67,8 +71,18 @@ pdfkeywords={electrical circuits, information theory},
 \section{Introduction}
 \input{introduction.tex}
 
-\section{A Noisy Half-Adder}
-\input{half_adder.tex}
+\section{Arithmetic Logic Units and Adders}
+\input{adder.tex}
+
+\section{A Noise Model for Adder}
+\input{noisy_adders.tex}
+
+\section{k--Redundant Approximate Adders}
+\input{redundant_adders.tex}
+
+\section{Experimental Results}
+
+\section{Conclusion}
 
 \bibliographystyle{unsrtnat}
 \bibliography{references} 
