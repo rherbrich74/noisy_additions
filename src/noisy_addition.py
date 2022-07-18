@@ -124,119 +124,107 @@ def four_bit_adder(ha_map,fa1_map,fa2_map,fa3_map):
                                     out[k] = v
     return(out)
 
-# def plot_basic_logic(alpha=0,d=8):
+def plot_basic_logic(alpha=0,d=4):
+    """Plots the probability distributions of basic logic functions"""
+    beta = np.linspace(0, 0.5, 100)
+    plt.plot(beta, [pand(alpha,b)[(0,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
+    plt.plot(beta, [pand(alpha,b)[(0,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='blue')
+    plt.plot(beta, [pand(alpha,b)[(1,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='green')
+    plt.plot(beta, [pand(alpha,b)[(1,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
+
+    plt.plot(beta, [recursive_safe(pand(alpha,b),por(alpha,b),d)[(0,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
+    plt.plot(beta, [recursive_safe(pand(alpha,b),por(alpha,b),d)[(0,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='blue')
+    plt.plot(beta, [recursive_safe(pand(alpha,b),por(alpha,b),d)[(1,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='green')
+    plt.plot(beta, [recursive_safe(pand(alpha,b),por(alpha,b),d)[(1,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
+
+    plt.legend(['P(and=1|a=0,b=0)', 'P(and=1|a=0,b=1)', 'P(and=1|a=1,b=0)', 'P(and=1|a=1,b=1)'])
+    plt.xlabel(r'$\beta$')
+    plt.ylabel('P(and=1|a,b)')
+    plt.title('Probability Distribution of AND with {0}-redundancy'.format(2**d))
+
+    plt.grid()
+    plt.show()
+
+# def plot_basic_logic(alpha=0,d=1):
 #     """Plots the probability distributions of basic logic functions"""
 #     beta = np.linspace(0, 0.5, 100)
-#     plt.plot(beta, [por(alpha,b)[(0,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
-#     plt.plot(beta, [por(alpha,b)[(0,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='blue')
-#     plt.plot(beta, [por(alpha,b)[(1,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='green')
-#     plt.plot(beta, [por(alpha,b)[(1,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
+#     plt.plot(beta, [pnot(alpha,b)[0][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
+#     plt.plot(beta, [pnot(alpha,b)[1][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
 
-#     plt.plot(beta, [recursive_safe(por(alpha,b),por(alpha,b),d)[(0,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
-#     plt.plot(beta, [recursive_safe(por(alpha,b),por(alpha,b),d)[(0,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='blue')
-#     plt.plot(beta, [recursive_safe(por(alpha,b),por(alpha,b),d)[(1,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='green')
-#     plt.plot(beta, [recursive_safe(por(alpha,b),por(alpha,b),d)[(1,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
+#     plt.plot(beta, [recursive_safe(pnot(alpha,b),pand(alpha,b),d)[0][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
+#     plt.plot(beta, [recursive_safe(pnot(alpha,b),pand(alpha,b),d)[1][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
 
-#     plt.legend(['P(or=1|a=0,b=0)', 'P(or=1|a=0,b=1)', 'P(or=1|a=1,b=0)', 'P(or=1|a=1,b=1)'])
+#     plt.legend(['P(not=1|a=0)', 'P(not=1|a=1)'])
 #     plt.xlabel(r'$\beta$')
-#     plt.ylabel('P(or=1|a,b)')
-#     plt.title('Probability Distribution of OR with {0}-redundancy'.format(d))
+#     plt.ylabel('P(not=1|a)')
+#     plt.title('Probability Distribution of NOT with {0}-redundancy'.format(d))
 
 #     plt.grid()
 #     plt.show()
 
-def plot_basic_logic(alpha=0,d=1):
-    """Plots the probability distributions of basic logic functions"""
+def plot_half_adder(inp=(1,1),d=0):
+    """Plots the probability distributions of a half-adder"""
     beta = np.linspace(0, 0.5, 100)
-    plt.plot(beta, [pnot(alpha,b)[0][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
-    plt.plot(beta, [pnot(alpha,b)[1][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
 
-    plt.plot(beta, [recursive_safe(pnot(alpha,b),pand(alpha,b),d)[0][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
-    plt.plot(beta, [recursive_safe(pnot(alpha,b),pand(alpha,b),d)[1][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
+    P = [[half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(0,0)] for b in beta]]
+    P += [[half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(1,0)] for b in beta]]
+    P += [[half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(0,1)] for b in beta]]
+    P += [[half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(1,1)] for b in beta]]
+    P_stack = np.cumsum(P, axis=0)
 
-    plt.legend(['P(not=1|a=0)', 'P(not=1|a=1)'])
+    plt.fill_between(beta, 0, P_stack[0,:], facecolor="red")
+    plt.fill_between(beta, P_stack[0,:], P_stack[1,:], facecolor="blue")
+    plt.fill_between(beta, P_stack[1,:], P_stack[2,:], facecolor="green")
+    plt.fill_between(beta, P_stack[2,:], P_stack[3,:], facecolor="black")
+    plt.legend([r'P(s=0,$c_{out}$=0)',r'P(s=1,$c_{out}$=0)',r'P(s=0,$c_{out}$=1)',r'P(s=1,$c_{out}$=1)'],loc='lower right')
     plt.xlabel(r'$\beta$')
-    plt.ylabel('P(not=1|a)')
-    plt.title('Probability Distribution of NOT with {0}-redundancy'.format(d))
+    plt.ylabel(r'P(s,$c_{out}$|a=%d,b=%d)' % (inp[0],inp[1]))
+    if (d > 0):
+        plt.title('Probability Distribution of a half-adder with {0}-redundancy'.format(2**d))
+    else:
+        plt.title('Probability Distribution of a half-adder')
 
     plt.grid()
-    plt.show()
 
-def plot_half_adder(inp=(1,1),d=8):
-    """Plots the probability distributions of basic logic functions"""
+def plot_full_adder(inp=(1,0,1),d=0):
+    """Plots the probability distributions of a full adder"""
     beta = np.linspace(0, 0.5, 100)
 
-    plt.plot(beta, [half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b))[inp][(0,0)] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
-    plt.plot(beta, [half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b))[inp][(1,0)] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='blue')
-    plt.plot(beta, [half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b))[inp][(0,1)] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='green')
-    plt.plot(beta, [half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b))[inp][(1,1)] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
-
-    plt.plot(beta, [half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(0,0)] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
-    plt.plot(beta, [half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(1,0)] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='blue')
-    plt.plot(beta, [half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(0,1)] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='green')
-    plt.plot(beta, [half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(1,1)] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
-
-    plt.legend([r'P(s=0,$c_{out}$=0|a,b)', r'P(s=1,$c_{out}$=0|a,b)', r'P(s=0,$c_{out}$=1|a,b)', r'P(s=1,$c_{out}$=1|a,b)'])
-    plt.xlabel(r'$\beta$')
-    plt.ylabel(r'P(s,$c_{out}$|a,b)')
-    plt.title('Probability Distribution of half-adder with k-redundancy')
-
-    plt.grid()
-    plt.show()
-
-def plot_full_adder(inp=(0,0,0),d=8):
-    """Plots the probability distributions of basic logic functions"""
-    beta = np.linspace(0, 0.5, 100)
-
-    plt.plot(beta, [
-        full_adder(half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b)),
-                   half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b)),
-                   por(0,b))[inp][(0,0)]
-        for b in beta] , linestyle='-', marker='', color='red', linewidth=2.5)
-    plt.plot(beta, [
-        full_adder(half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b)),
-                   half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b)),
-                   por(0,b))[inp][(0,1)]
-        for b in beta] , linestyle='-', marker='', color='blue', linewidth=2.5)
-    plt.plot(beta, [
-        full_adder(half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b)),
-                   half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b)),
-                   por(0,b))[inp][(1,0)]
-        for b in beta] , linestyle='-', marker='', color='green', linewidth=2.5)
-    plt.plot(beta, [
-        full_adder(half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b)),
-                   half_adder(pand(0,b),pand(0,b),pnot(0,b),por(0,b)),
-                   por(0,b))[inp][(1,1)]
-        for b in beta] , linestyle='-', marker='', color='black', linewidth=2.5)
-
-    plt.plot(beta, [
+    P = [[
         full_adder(half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
                    half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
                    por(0,b))[inp][(0,0)]
-        for b in beta] , linestyle='--', marker='', color='red', linewidth=2.5)
-    plt.plot(beta, [
-        full_adder(half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   por(0,b))[inp][(0,1)]
-        for b in beta] , linestyle='--', marker='', color='blue', linewidth=2.5)
-    plt.plot(beta, [
+        for b in beta]]
+    P += [[
         full_adder(half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
                    half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
                    por(0,b))[inp][(1,0)]
-        for b in beta] , linestyle='--', marker='', color='green', linewidth=2.5)
-    plt.plot(beta, [
+        for b in beta]]
+    P += [[
+        full_adder(half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
+                   half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
+                   por(0,b))[inp][(0,1)]
+        for b in beta]]
+    P += [[
         full_adder(half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
                    half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
                    por(0,b))[inp][(1,1)]
-        for b in beta] , linestyle='--', marker='', color='black', linewidth=2.5)
+        for b in beta]]
+    P_stack = np.cumsum(P, axis=0)
 
-    plt.legend([r'P(s=0,$c_{out}$=0|a,b,$c_{in}$)', r'P(s=1,$c_{out}$=0|a,b,$c_{in}$)', r'P(s=0,$c_{out}$=1|a,b,$c_{in}$)', r'P(s=1,$c_{out}$=1|a,b,$c_{in}$)'])
+    plt.fill_between(beta, 0, P_stack[0,:], facecolor="red")
+    plt.fill_between(beta, P_stack[0,:], P_stack[1,:], facecolor="blue")
+    plt.fill_between(beta, P_stack[1,:], P_stack[2,:], facecolor="green")
+    plt.fill_between(beta, P_stack[2,:], P_stack[3,:], facecolor="black")
+    plt.legend([r'P(s=0,$c_{out}$=0)',r'P(s=1,$c_{out}$=0)',r'P(s=0,$c_{out}$=1)',r'P(s=1,$c_{out}$=1)'], loc='lower right')
     plt.xlabel(r'$\beta$')
-    plt.ylabel(r'P(s,$c_{out}$|a,b,$c_{in}$)')
-    plt.title('Probability Distribution of a full-adder with k-redundancy')
+    plt.ylabel(r'P(s,$c_{out}$|a,b,$c_{in}$|a=%d,b=%d,$c_{in}$=%d)' % (inp[0],inp[1],inp[2]))
+    if (d > 0):
+        plt.title('Probability Distribution of a full-adder with {0}-redundancy'.format(2**d))
+    else:
+        plt.title('Probability Distribution of a full-adder')
 
     plt.grid()
-    plt.show()
 
 def plot_4bit_adder(alpha = 0, beta = 0.15, a = 14, b = 7, d = 8):
     """Plots the distribution of sums of the 4bit adder for two specific inputs"""
@@ -252,7 +240,6 @@ def plot_4bit_adder(alpha = 0, beta = 0.15, a = 14, b = 7, d = 8):
     plt.xlabel(r'sum')
     plt.ylabel('P(sum|a={0},b={1})'.format(a,b))
     plt.title(r'Probability Distribution over sum of {0} and {1} ($\alpha$={2},$\beta$={3})'.format(a,b,alpha,beta))
-    plt.show()
 
 def plot_4bit_adder_dist(alpha = 0, beta = 0.10, d=2):
     """Plots the whole distribution of the 4bit adder when adding k-redundancy"""
@@ -289,7 +276,6 @@ def plot_4bit_adder_dist(alpha = 0, beta = 0.10, d=2):
     axs[1].title.set_text(r'$\alpha$={0}, $\beta$={1}'.format(alpha,beta))
     axs[2].matshow(A2)
     axs[2].title.set_text(r'$\alpha$={0}, $\beta$={1} with {2}-redundancy'.format(alpha,beta,d))
-    plt.show()
 
 def print_distribution(p_map = full_adder(half_adder(pand(0,0),pand(0,0),pnot(0,0),por(0,0)),
                                           half_adder(pand(0,0),pand(0,0),pnot(0,0),por(0,0)),
@@ -307,11 +293,38 @@ def check_distribution(p_map = full_adder(half_adder(pand(0,0),pand(0,0),pnot(0,
             exit()
     print("ok")
 
-# plot_basic_logic()
+def gen_paper_plots():
+    plot_half_adder(inp=(0,0))
+    plt.savefig('media/noisy_half_adder_value_dist_00.eps', format='eps')
+    plot_half_adder(inp=(0,1))
+    plt.savefig('media/noisy_half_adder_value_dist_01.eps', format='eps')
+    plot_half_adder(inp=(1,1))
+    plt.savefig('media/noisy_half_adder_value_dist_11.eps', format='eps')
+    plot_full_adder(inp=(0,0,0))
+    plt.savefig('media/noisy_full_adder_value_dist_000.eps', format='eps')
+    plot_full_adder(inp=(0,1,0))
+    plt.savefig('media/noisy_full_adder_value_dist_010.eps', format='eps')
+    plot_full_adder(inp=(1,1,0))
+    plt.savefig('media/noisy_full_adder_value_dist_110.eps', format='eps')
+    plot_full_adder(inp=(0,0,1))
+    plt.savefig('media/noisy_full_adder_value_dist_001.eps', format='eps')
+    plot_full_adder(inp=(0,1,1))
+    plt.savefig('media/noisy_full_adder_value_dist_011.eps', format='eps')
+    plot_full_adder(inp=(1,1,1))
+    plt.savefig('media/noisy_full_adder_value_dist_111.eps', format='eps')
+
+# plot_basic_logic(d=1)
+# plt.show()
 # plot_half_adder()
-# plot_full_adder(inp=(0,0,1))
+# plt.show()
+# plot_full_adder(inp=(1,0,1))
+# plt.show()
 # plot_4bit_adder(alpha=0)
-plot_4bit_adder_dist(alpha=0,beta=0.01, d=3)
+# plt.show()
+# plot_4bit_adder_dist(alpha=0,beta=0.01, d=3)
+# plt.show()
 
 # print_distribution()
 # check_distribution()
+
+gen_paper_plots()
