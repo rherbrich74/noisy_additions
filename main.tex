@@ -7,9 +7,9 @@
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsfonts}       % blackboard math symbols
-\usepackage{amsmath}		% boldsymbols
+\usepackage{amsmath}
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
-\usepackage{microtype}      % microtypography
+\usepackage{microtype}
 \usepackage{lipsum}		% Can be removed after putting your text content
 \usepackage{graphicx}
 \usepackage[square,numbers]{natbib}
@@ -27,18 +27,19 @@
 \newcommand{\bs}{\boldsymbol{s}}
 \newcommand{\0}{\boldsymbol{0}}
 \newcommand{\1}{\boldsymbol{1}}
+\newcommand{\Bin}{\mathbb{B}}
 \newcommand{\cout}{c_{\mathrm{out}}}
 \newcommand{\cin}{c_{\mathrm{in}}}
 \newcommand{\ha}{\mathrm{ha}}
 \newcommand{\fa}{\mathrm{fa}}
-\newcommand{\AND}{\mathrm{and}}
-\newcommand{\OR}{\mathrm{or}}
+\newcommand{\NAND}{\mathrm{nand}}
+\newcommand{\NOR}{\mathrm{nor}}
 \newcommand{\NOT}{\mathrm{not}}
 
 
 \title{On Noisy Additions}
 
-\date{July 18, 2022}		% Here you can change the date presented in the paper title
+\date{July 20, 2022}		% Here you can change the date presented in the paper title
 
 \author{Ralf Herbrich \\
 	Hasso-Plattner Institute\\
@@ -81,14 +82,19 @@ pdfkeywords={electrical circuits, information theory},
 \section{A Noise Model for Adder}
 \input{noisy_adders.tex}
 
-\section{k--Redundant Approximate Adders}
-\input{redundant_adders.tex}
+% \section{k--Redundant Approximate Adders}
+% \input{redundant_adders.tex}
 
 \section{Experimental Results}
 
 \section{Conclusion}
 
+\appendix
+\input{appendix.tex}
+
+
 \bibliographystyle{unsrtnat}
-\bibliography{references} 
+\bibliography{references}
+
 
 \end{document}

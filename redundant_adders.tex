@@ -1,17 +1,18 @@
 \label{sec:redundant_adders}
 The source of the errors of the noisy addition is the error rate of the AND, OR and NOT gates; for example, with probability $1-(1-\beta)^2$ the carry bit $c=0$ even when $a=1$ and $b=1$. In order to reduce this error probability of the AND and OR gates, we propose to introduce scalable {\em redundant computation} (similar to the idea of redundancy in messages in order to compensate for channel noise in communication, see, e.g.\ \cite{Sha1948k}). One such idea is to {\em duplicate} the original function and combine the two parallel computations with an OR such that a value of $1$ is computed if at least one of the original units computes a $1$. More formally, we define
 \begin{align}
-    a \land_2 b & = (a \land b) \lor (a \land b) \\
-    a \lor_2 b & = (a \lor b) \lor (a \lor b) \,.
+    a \land_2 b & = (a \land b) \lor (a \land b)   \\
+    a \lor_2 b  & = (a \lor b) \lor (a \lor b) \,.
 \end{align}
-This type of redundancy will achieve the desired effect of minimizing the error of not computing $1$. Similarly, we can combine the original units with and AND gate which minimized the error of not computing $0$. 
+This type of redundancy will achieve the desired effect of minimizing the error of not computing $1$. Similarly, we can combine the original units with and AND gate which minimized the error of not computing $0$.
 
-Using this design pattern, we can now increase the redundancy in an exponential fashion by virtue of 
+Using this design pattern, we can now increase the redundancy in an exponential fashion by virtue of
 \begin{align}
-    a \land_{2k} b & = (a \land_k b) \lor (a \land_k b) \\
-    a \lor_{2k} b & = (a \lor_k b) \lor (a \lor_k b) \,.
+    a \land_{2k} b & = (a \land_k b) \lor (a \land_k b)   \\
+    a \lor_{2k} b  & = (a \lor_k b) \lor (a \lor_k b) \,.
 \end{align}
 Note that this design still uses the original noise OR gate to compute the combination of all outputs. In Figure \ref{fig:noise_prob_dist_redudancy} we have shown the new probability distribution over the four possible values of $(s,c)$ when replacing all the AND and OR gates in Figure \ref{fig:half-and-full-adder} with $16$--redundant AND and OR gates. All the way to $\beta \approx 10\%$, the error remains relatively small compared to the noise-free half-adder!
+
 
 \begin{figure}
     \begin{minipage}[c]{.45\linewidth}

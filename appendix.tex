@@ -1,0 +1,71 @@
+\section{CMOS Gates}
+
+\begin{figure}
+    \begin{minipage}[c]{0.25\linewidth}
+        \begin{circuitikz}
+            % Circuit style
+            \ctikzset{
+                tripoles/mos style/arrows,
+                logic ports=ieee,
+                logic ports/scale=0.5
+            }
+            \draw (0,0)
+            node[pmos] (pmosA) {$Q_1$}
+            (pmosA.G) to[short,-] ++(-0.5,0) to[short,-] ++(0,-1) to[short,-o] ++(-0.5,0) node[left] {$V_i$}
+            to[short,-o,fill=black] ++(0.5,0) to[short,-] ++(0,-1) to[short,-] (0,-2) node[nmos] (nmosA) {$Q_2$}
+            (nmosA.D) to (pmosA.D) to[short,-] ++(0,-0.25) to[short,-o] ++(0.5,0) node[right] {$V_o$}
+            (pmosA.S) to[short,-o] ++(0,0.25) node[above] {$+V_{dd}$}
+            (nmosA.S) to[short,-] ++(0,-0.25) node[ground] {GND};
+        \end{circuitikz}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.35\linewidth}
+        \begin{circuitikz}
+            % Circuit style
+            \ctikzset{
+                tripoles/mos style/arrows,
+                logic ports=ieee,
+                logic ports/scale=0.8
+            }
+
+            \draw (0,0)
+            node[pmos] (pmosA) {$Q_1$}
+            (pmosA.D) to[short,-o,fill=black] ++(0,-0.0) node[shape=coordinate] (po) {} to[short,-] ++(0,-0) node[nmos,anchor=D] (nmosA) {$Q_3$}
+            (nmosA.S) to[short,-] ++(0,-0) node[nmos,anchor=D] (nmosB) {$Q_4$}
+            (nmosB.S) to[short,-] ++(0,-0.25) node[ground] {GND}
+            (nmosA.G) to[short,-o,fill=black] ++(-2,0) node[shape=coordinate] (pa) {} to[short,-o] ++(-0.5,0) node[left] {$V_{i,1}$}
+            (nmosB.G) to[short,-o,fill=black] ++(-0,0) node[shape=coordinate] (pb) {} to[short,-o] ++(-2.5,0) node[left] {$V_{i,2}$}
+            (pa) to[short,-] ++(0,1.55) node[pmos,anchor=G] (pmosB) {$Q_2$}
+            (pmosA.G) to[short,-|] (pb)
+            (pmosB.D) to[short,-] (po) to[short,-o] ++(0.5,0) node[right] {$V_o$}
+            (pmosB.S) to[short,-o,fill=black] (pmosA.S) to[short,-o] ++(0,0.5) node[above] {$+V_{dd}$};
+        \end{circuitikz}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.35\linewidth}
+        \begin{circuitikz}
+            % Circuit style
+            \ctikzset{
+                tripoles/mos style/arrows,
+                logic ports=ieee,
+                logic ports/scale=0.8,
+                % logic ports/fill=lightgray
+            }
+
+            \draw (0,0)
+            node[pmos] (pmosA) {$Q_1$}
+            (pmosA.D) to[short,-] ++(0,-0) node[pmos,anchor=S] (pmosB) {$Q_2$}
+            (pmosB.D) to[short,-o,fill=black] ++(0,-0.0) node[shape=coordinate] (po) {} to[short,-] ++(0,-0.0) node[nmos,anchor=D] (nmosA) {$Q_4$}
+            (pmosA.G) to[short,-o,fill=black] ++(-2,0) node[shape=coordinate] (pa) {} to[short,-o] ++(-0.5,0) node[left] {$V_{i,1}$}
+            (pmosB.G) to[short,-o,fill=black] ++(-0,0) node[shape=coordinate] (pb) {} to[short,-o] ++(-2.5,0) node[left] {$V_{i,2}$}
+            (nmosA.S) to[short,-] ++(-2,0) node[nmos,anchor=S] (nmosB) {$Q_3$}
+            (nmosA.G) to[short,-|] (pb)
+            (nmosB.G) to[short,-|] (pa)
+            (pmosA.S) to[short,-o] ++(0,0) node[above] {$+V_{dd}$}
+            (nmosB.D) to[short,-] (po) to[short,-o] ++(0.5,0) node[right] {$V_o$}
+            (nmosA.S) to[short,-o,fill=black] ++(-1,0) to[short,-] ++(0,-0.5) node[ground] {GND}
+            ;
+        \end{circuitikz}
+    \end{minipage}
+    \caption{MOSFET circuit diagram for the basic logic functions NOT (left), NAND (middle) and NOR (right). The input voltage is at $V_i$ (or $V_{i,1}$ and $V_{i,2}$) and the output voltage (corresponding to the output of the logic gate) is at the $V_o$ node. The supply voltage that is provided to the MOSFETs is at node $V_{dd}$ (typically $5V$); ground is indicated by GND. {\bf (Left)} A NOT-gate reverses the input logic state by employing two series-connected MOSFETS, one n-type and one p-type. Applying $+V$ (logic 1) to the input ($V_i$), transistor $Q_2$ is “on,” and transistor $Q_1$ remains “off” resulting in an output voltage ($V_o$) close to $0V$ (logic 0). {\bf (Middle)} A two-input NAND gate where p-type MOSFETs $Q_1$ and $Q_2$ are connected in parallel and n-type MOSFETs $Q_3$ and $Q_4$ are connected in series between $+V$ and the output terminal $V_o$. Only when both $Q_3$ and $Q_4$ are ”on” (logic 1 on both $V_{i_1}$ and $V_{i_2}$), the output voltage $V_o$ is close to $0V$ (logic 0) as it is shorted with GND.  {\bf (Right)} A two-input NOR gate where p-type MOSFETs $Q_1$ and $Q_2$ are connected in series and n-type MOSFETs $Q_3$ and $Q_4$ are connected in parallel between $+V$ and the output terminal $V_o$. Here, only when both $Q_3$ and $Q_4$ are ”off” (logic 0 on both $V_{i_1}$ and $V_{i_2}$), the output voltage $V_o$ is close to $+V$ (logic 1) as there is no connection to GND. \label{fig:not-nand-nor-CMOS}}
+\end{figure}

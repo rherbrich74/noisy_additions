@@ -1,5 +1,5 @@
 # noisy_addition.py         A set of functions to compute the output probabilities of 
-#                           noisy half- and full-adders
+#                           noisy half-, full- and 4-bit-adders
 #
 # 2022 written by Ralf Herbrich
 # Hasso-Plattner Institute
@@ -7,22 +7,22 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def pand(alpha,beta):
+def pnand(alpha,beta):
     """Computes the distribution of the output of an AND with asymmetric noise"""
     return {
-        (0,0): { 0: 1-alpha*alpha,          1: alpha*alpha}, 
-        (0,1): { 0: 1-alpha*(1-beta),       1: alpha*(1-beta)}, 
-        (1,0): { 0: 1-alpha*(1-beta),       1: alpha*(1-beta)}, 
-        (1,1): { 0: 1-(1-beta)*(1-beta),    1: (1-beta)*(1-beta)}
+        (0,0): { 0: alpha*alpha,          1: 1-alpha*alpha}, 
+        (0,1): { 0: alpha*(1-beta),       1: 1-alpha*(1-beta)}, 
+        (1,0): { 0: alpha*(1-beta),       1: 1-alpha*(1-beta)}, 
+        (1,1): { 0: (1-beta)*(1-beta),    1: 1-(1-beta)*(1-beta)}
     } 
 
-def por(alpha,beta):
-    """Computes the distribution of the output of an OR with asymmetric noise"""
+def pnor(alpha,beta):
+    """Computes the distribution of the output of an NOR with asymmetric noise"""
     return {
-        (0,0): { 0: (1-alpha)*(1-alpha),    1: 1-(1-alpha)*(1-alpha)}, 
-        (0,1): { 0:(1-alpha)*beta,          1: 1-(1-alpha)*beta}, 
-        (1,0): { 0:(1-alpha)*beta,          1: 1-(1-alpha)*beta}, 
-        (1,1): { 0:beta*beta,               1: 1-beta*beta}
+        (0,0): { 0:1-(1-alpha)*(1-alpha),   1: (1-alpha)*(1-alpha)}, 
+        (0,1): { 0:1-(1-alpha)*beta,        1: (1-alpha)*beta}, 
+        (1,0): { 0:1-(1-alpha)*beta,        1: (1-alpha)*beta}, 
+        (1,1): { 0:1-beta*beta,             1: beta*beta}
     } 
 
 def pnot(alpha,beta):
@@ -32,29 +32,16 @@ def pnot(alpha,beta):
         1: { 0: 1-beta, 1: beta } 
     } 
 
-def safe_by_combine(f_map,combine_map):
-    """Computes the distribution of the output of a single-valued logic gate which 
-    has been made safe by replication and redundancy resolution via a probabilistic OR"""
+def invert(f_map,not_map):
+    """Computes the distribution of the output of a single-valued logic gate is followed by a 
+    probabilistic NOT gate"""
     return  {k: { 
-                    0:  v[0]*v[0]*combine_map[(0,0)][0] + 
-                        v[0]*v[1]*combine_map[(0,1)][0] + 
-                        v[1]*v[0]*combine_map[(1,0)][0] + 
-                        v[1]*v[1]*combine_map[(1,1)][0],
-                    1:  v[0]*v[0]*combine_map[(0,0)][1] + 
-                        v[0]*v[1]*combine_map[(0,1)][1] + 
-                        v[1]*v[0]*combine_map[(1,0)][1] + 
-                        v[1]*v[1]*combine_map[(1,1)][1]
+                    0: v[0]*not_map[(0)][0] + v[1]*not_map[(1)][0],
+                    1: v[0]*not_map[(0)][1] + v[1]*not_map[(1)][1]
                } for k, v in f_map.items()
             }
 
-def recursive_safe(f_map,combine_map,n):
-    """Applies the save_by_combine function recursively to reduce the error rate of the noisy AND, OR or NOT"""
-    f_out = f_map
-    for i in range(n):
-        f_out = safe_by_combine(f_out,combine_map)
-    return f_out
-
-def half_adder(and1_map,and2_map,not_map,or_map):
+def half_adder(nand_map,nor_map,not_map):
     """Computes the distribution of the output of a half-adder"""
     out = {}
     for a in [0,1]:
@@ -67,12 +54,14 @@ def half_adder(and1_map,and2_map,not_map,or_map):
                     p = 0
                     for d in [0,1]:
                         for e in [0,1]:
-                            p = p + and1_map[(a,b)][c_out]*or_map[(a,b)][d]*not_map[c_out][e]*and2_map[(d,e)][s]
+                            for f in [0,1]:
+                                for g in [0,1]:
+                                    p = p + nand_map[(a,b)][e]*nor_map[(a,b)][d]*not_map[e][c_out]*not_map[d][f]*nand_map[(e,f)][g]*not_map[g][s]
                     v[kv] = p
             out[k] = v
     return out
 
-def full_adder(ha1_map,ha2_map,or_map):
+def full_adder(ha_map,nor_map,not_map):
     """Computes the distribution of the output of a full-adder"""
     out = {}
     for a in [0,1]:
@@ -87,12 +76,13 @@ def full_adder(ha1_map,ha2_map,or_map):
                       for d in [0,1]:
                         for e in [0,1]:
                             for f in [0,1]:
-                                p = p + ha1_map[(a,b)][(d,e)]*ha2_map[(d,c_in)][(s,f)]*or_map[(e,f)][c_out] 
+                                for g in [0,1]:
+                                    p = p + ha_map[(a,b)][(d,e)]*ha_map[(d,c_in)][(s,f)]*nor_map[(e,f)][g]*not_map[g][c_out] 
                       v[kv] = p
                 out[k] = v
     return out
 
-def four_bit_adder(ha_map,fa1_map,fa2_map,fa3_map):
+def four_bit_adder(ha_map,fa_map):
     """Computes the distribution of the output of a 4-bit adder"""
     out = {}
     for a0 in [0,1]:
@@ -117,9 +107,9 @@ def four_bit_adder(ha_map,fa1_map,fa2_map,fa3_map):
                                                                 for c2_out in [0,1]:
                                                                     p = p + \
                                                                         ha_map[(a0,b0)][(s0,c0_out)] * \
-                                                                        fa1_map[(a1,b1,c0_out)][(s1,c1_out)] * \
-                                                                        fa2_map[(a2,b2,c1_out)][(s2,c2_out)] * \
-                                                                        fa3_map[(a3,b3,c2_out)][(s3,c3_out)]
+                                                                        fa_map[(a1,b1,c0_out)][(s1,c1_out)] * \
+                                                                        fa_map[(a2,b2,c1_out)][(s2,c2_out)] * \
+                                                                        fa_map[(a3,b3,c2_out)][(s3,c3_out)]
                                                         v[kv] = p
                                     out[k] = v
     return(out)
@@ -127,49 +117,26 @@ def four_bit_adder(ha_map,fa1_map,fa2_map,fa3_map):
 def plot_basic_logic(alpha=0,d=4):
     """Plots the probability distributions of basic logic functions"""
     beta = np.linspace(0, 0.5, 100)
-    plt.plot(beta, [pand(alpha,b)[(0,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
-    plt.plot(beta, [pand(alpha,b)[(0,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='blue')
-    plt.plot(beta, [pand(alpha,b)[(1,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='green')
-    plt.plot(beta, [pand(alpha,b)[(1,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
+    plt.plot(beta, [pnand(alpha,b)[(0,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
+    plt.plot(beta, [pnand(alpha,b)[(0,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='blue')
+    plt.plot(beta, [pnand(alpha,b)[(1,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='green')
+    plt.plot(beta, [pnand(alpha,b)[(1,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
 
-    plt.plot(beta, [recursive_safe(pand(alpha,b),por(alpha,b),d)[(0,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
-    plt.plot(beta, [recursive_safe(pand(alpha,b),por(alpha,b),d)[(0,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='blue')
-    plt.plot(beta, [recursive_safe(pand(alpha,b),por(alpha,b),d)[(1,0)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='green')
-    plt.plot(beta, [recursive_safe(pand(alpha,b),por(alpha,b),d)[(1,1)][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
-
-    plt.legend(['P(and=1|a=0,b=0)', 'P(and=1|a=0,b=1)', 'P(and=1|a=1,b=0)', 'P(and=1|a=1,b=1)'])
+    plt.legend(['P(nand=1|a=0,b=0)', 'P(nand=1|a=0,b=1)', 'P(nand=1|a=1,b=0)', 'P(nand=1|a=1,b=1)'])
     plt.xlabel(r'$\beta$')
-    plt.ylabel('P(and=1|a,b)')
-    plt.title('Probability Distribution of AND with {0}-redundancy'.format(2**d))
+    plt.ylabel('P(nand=1|a,b)')
+    plt.title('Probability Distribution of NAND')
 
     plt.grid()
-    plt.show()
 
-# def plot_basic_logic(alpha=0,d=1):
-#     """Plots the probability distributions of basic logic functions"""
-#     beta = np.linspace(0, 0.5, 100)
-#     plt.plot(beta, [pnot(alpha,b)[0][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
-#     plt.plot(beta, [pnot(alpha,b)[1][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
-
-#     plt.plot(beta, [recursive_safe(pnot(alpha,b),pand(alpha,b),d)[0][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='red')
-#     plt.plot(beta, [recursive_safe(pnot(alpha,b),pand(alpha,b),d)[1][1] for b in beta] , linestyle='--', linewidth=2.5, marker='', color='black')
-
-#     plt.legend(['P(not=1|a=0)', 'P(not=1|a=1)'])
-#     plt.xlabel(r'$\beta$')
-#     plt.ylabel('P(not=1|a)')
-#     plt.title('Probability Distribution of NOT with {0}-redundancy'.format(d))
-
-#     plt.grid()
-#     plt.show()
-
-def plot_half_adder(inp=(1,1),d=0):
+def plot_half_adder(inp=(1,1)):
     """Plots the probability distributions of a half-adder"""
     beta = np.linspace(0, 0.5, 100)
 
-    P = [[half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(0,0)] for b in beta]]
-    P += [[half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(1,0)] for b in beta]]
-    P += [[half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(0,1)] for b in beta]]
-    P += [[half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),recursive_safe(por(0,b),por(0,b),d))[inp][(1,1)] for b in beta]]
+    P = [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(0,0)] for b in beta]]
+    P += [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(1,0)] for b in beta]]
+    P += [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(0,1)] for b in beta]]
+    P += [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(1,1)] for b in beta]]
     P_stack = np.cumsum(P, axis=0)
 
     plt.fill_between(beta, 0, P_stack[0,:], facecolor="red")
@@ -179,37 +146,18 @@ def plot_half_adder(inp=(1,1),d=0):
     plt.legend([r'P(s=0,$c_{out}$=0)',r'P(s=1,$c_{out}$=0)',r'P(s=0,$c_{out}$=1)',r'P(s=1,$c_{out}$=1)'],loc='lower right')
     plt.xlabel(r'$\beta$')
     plt.ylabel(r'P(s,$c_{out}$|a=%d,b=%d)' % (inp[0],inp[1]))
-    if (d > 0):
-        plt.title('Probability Distribution of a half-adder with {0}-redundancy'.format(2**d))
-    else:
-        plt.title('Probability Distribution of a half-adder')
+    plt.title('Probability Distribution of a half-adder')
 
     plt.grid()
 
-def plot_full_adder(inp=(1,0,1),d=0):
+def plot_full_adder(inp=(1,0,1)):
     """Plots the probability distributions of a full adder"""
     beta = np.linspace(0, 0.5, 100)
 
-    P = [[
-        full_adder(half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   por(0,b))[inp][(0,0)]
-        for b in beta]]
-    P += [[
-        full_adder(half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   por(0,b))[inp][(1,0)]
-        for b in beta]]
-    P += [[
-        full_adder(half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   por(0,b))[inp][(0,1)]
-        for b in beta]]
-    P += [[
-        full_adder(half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   half_adder(recursive_safe(pand(0,b),por(0,b),d),recursive_safe(pand(0,b),por(0,b),d),pnot(0,b),por(0,b)),
-                   por(0,b))[inp][(1,1)]
-        for b in beta]]
+    P = [[full_adder(half_adder(pnand(0,b),pnor(0,b),pnot(0,b)),pnor(0,b),pnot(0,b))[inp][(0,0)] for b in beta]]
+    P += [[full_adder(half_adder(pnand(0,b),pnor(0,b),pnot(0,b)),pnor(0,b),pnot(0,b))[inp][(1,0)] for b in beta]]
+    P += [[full_adder(half_adder(pnand(0,b),pnor(0,b),pnot(0,b)),pnor(0,b),pnot(0,b))[inp][(0,1)] for b in beta]]
+    P += [[full_adder(half_adder(pnand(0,b),pnor(0,b),pnot(0,b)),pnor(0,b),pnot(0,b))[inp][(1,1)] for b in beta]]
     P_stack = np.cumsum(P, axis=0)
 
     plt.fill_between(beta, 0, P_stack[0,:], facecolor="red")
@@ -219,19 +167,15 @@ def plot_full_adder(inp=(1,0,1),d=0):
     plt.legend([r'P(s=0,$c_{out}$=0)',r'P(s=1,$c_{out}$=0)',r'P(s=0,$c_{out}$=1)',r'P(s=1,$c_{out}$=1)'], loc='lower right')
     plt.xlabel(r'$\beta$')
     plt.ylabel(r'P(s,$c_{out}$|a,b,$c_{in}$|a=%d,b=%d,$c_{in}$=%d)' % (inp[0],inp[1],inp[2]))
-    if (d > 0):
-        plt.title('Probability Distribution of a full-adder with {0}-redundancy'.format(2**d))
-    else:
-        plt.title('Probability Distribution of a full-adder')
+    plt.title('Probability Distribution of a full-adder')
 
     plt.grid()
 
-def plot_4bit_adder(alpha = 0, beta = 0.15, a = 14, b = 7, d = 8):
+def plot_4bit_adder(alpha = 0, beta = 0.15, a = 14, b = 7):
     """Plots the distribution of sums of the 4bit adder for two specific inputs"""
-    pand2 = recursive_safe(pand(alpha,beta),por(alpha,beta),d)
-    ha_map = half_adder(pand2,pand2,pnot(alpha,beta),por(alpha,beta))
-    fa_map = full_adder(ha_map, ha_map, por(alpha,beta))
-    fb_map = four_bit_adder(ha_map,fa_map,fa_map,fa_map)
+    ha_map = half_adder(pnand(alpha,beta),pnor(alpha,beta),pnot(alpha,beta))
+    fa_map = full_adder(ha_map,pnor(alpha,beta),pnot(alpha,beta))
+    fb_map = four_bit_adder(ha_map,fa_map)
 
     key = (a & 1, (a>>1) & 1, (a>>2) & 1, (a>>3) & 1,b & 1, (b>>1) & 1, (b>>2) & 1, (b>>3) & 1)
     hist = dict(sorted({ c4*16+c3*8+c2*4+c1*2+c0: v for ((c0,c1,c2,c3,c4),v) in fb_map[key].items() }.items()))
@@ -241,8 +185,8 @@ def plot_4bit_adder(alpha = 0, beta = 0.15, a = 14, b = 7, d = 8):
     plt.ylabel('P(sum|a={0},b={1})'.format(a,b))
     plt.title(r'Probability Distribution over sum of {0} and {1} ($\alpha$={2},$\beta$={3})'.format(a,b,alpha,beta))
 
-def plot_4bit_adder_dist(alpha = 0, beta = 0.10, d=2):
-    """Plots the whole distribution of the 4bit adder when adding k-redundancy"""
+def plot_4bit_adder_dist(alpha1 = 0, beta1 = 0.05, alpha2 = 0, beta2 = 0.1):
+    """Plots the whole distribution of the 4bit adders"""
     def compute_map(fb_map):
         A = np.zeros((32,256))
         for ((a0,a1,a2,a3,b0,b1,b2,b3),v) in fb_map.items():
@@ -252,41 +196,36 @@ def plot_4bit_adder_dist(alpha = 0, beta = 0.10, d=2):
                 A[key2][key1] = p
         return A
 
-    ha_map0 = half_adder(pand(0,0),pand(0,0),pnot(0,0),por(0,0))
-    fa_map0 = full_adder(ha_map0, ha_map0, por(0,0))
-    fb_map0 = four_bit_adder(ha_map0,fa_map0,fa_map0,fa_map0)
+    ha_map0 = half_adder(pnand(0,0),pnor(0,0),pnot(0,0))
+    fa_map0 = full_adder(ha_map0,pnor(0,0),pnot(0,0))
+    fb_map0 = four_bit_adder(ha_map0,fa_map0)
     A0 = compute_map(fb_map0)
 
-    ha_map1 = half_adder(pand(alpha,beta),pand(alpha,beta),pnot(alpha,beta),por(alpha,beta))
-    fa_map1 = full_adder(ha_map1, ha_map1, por(alpha,beta))
-    fb_map1 = four_bit_adder(ha_map1,fa_map1,fa_map1,fa_map1)
+    ha_map1 = half_adder(pnand(alpha1,beta1),pnor(alpha1,beta1),pnot(alpha1,beta1))
+    fa_map1 = full_adder(ha_map1,pnor(alpha1,beta1),pnot(alpha1,beta1))
+    fb_map1 = four_bit_adder(ha_map1,fa_map1)
     A1 = compute_map(fb_map1)
 
-    pand2 = recursive_safe(pand(alpha,beta),por(alpha,beta),d)
-    ha_map2 = half_adder(pand2,pand2,pnot(alpha,beta),por(alpha,beta))
-    fa_map2 = full_adder(ha_map2, ha_map2, por(alpha,beta))
-    fb_map2 = four_bit_adder(ha_map2,fa_map2,fa_map2,fa_map2)
+    ha_map2 = half_adder(pnand(alpha2,beta2),pnor(alpha2,beta2),pnot(alpha2,beta2))
+    fa_map2 = full_adder(ha_map2,pnor(alpha2,beta2),pnot(alpha2,beta2))
+    fb_map2 = four_bit_adder(ha_map2,fa_map2)
     A2 = compute_map(fb_map2)
 
     fig, axs = plt.subplots(3)
-    fig.suptitle('4-bit Adder Output Distribution for all 256 inputs to {0,..,31}')
+    # fig.suptitle('4-bit Adder Output Distribution for all 256 inputs to {0,..,31}')
     axs[0].matshow(A0)
     axs[0].title.set_text('Zero Noise')
     axs[1].matshow(A1)
-    axs[1].title.set_text(r'$\alpha$={0}, $\beta$={1}'.format(alpha,beta))
+    axs[1].title.set_text(r'$\alpha$={0}, $\beta$={1}'.format(alpha1,beta1))
     axs[2].matshow(A2)
-    axs[2].title.set_text(r'$\alpha$={0}, $\beta$={1} with {2}-redundancy'.format(alpha,beta,d))
+    axs[2].title.set_text(r'$\alpha$={0}, $\beta$={1}'.format(alpha2,beta2))
 
-def print_distribution(p_map = full_adder(half_adder(pand(0,0),pand(0,0),pnot(0,0),por(0,0)),
-                                          half_adder(pand(0,0),pand(0,0),pnot(0,0),por(0,0)),
-                                          por(0,0))):
+def print_distribution(p_map = full_adder(half_adder(pnand(0,0),pnor(0,0),pnot(0,0)),pnor(0,0),pnot(0,0))):
     """Outputs a probabilistic logic function on screen"""
     for (k,v) in p_map.items():
         print(k, v)
 
-def check_distribution(p_map = full_adder(half_adder(pand(0,0),pand(0,0),pnot(0,0),por(0,0)),
-                                          half_adder(pand(0,0),pand(0,0),pnot(0,0),por(0,0)),
-                                          por(0,0))):
+def check_distribution(p_map = full_adder(half_adder(pnand(0,0),pnor(0,0),pnot(0,0)),pnor(0,0),pnot(0,0))):
     for (k,v) in p_map.items():
         if(abs(sum([v2 for (k2,v2) in v.items()])-1.0) > 1e-4):
             print("normalization error for key", k, ": ", sum([v2 for (k2,v2) in v.items()]))
@@ -312,19 +251,22 @@ def gen_paper_plots():
     plt.savefig('media/noisy_full_adder_value_dist_011.eps', format='eps')
     plot_full_adder(inp=(1,1,1))
     plt.savefig('media/noisy_full_adder_value_dist_111.eps', format='eps')
+    plot_4bit_adder_dist(alpha1=0,beta1=0.05,alpha2=0,beta2=0.1)
+    plt.savefig('media/noisy_4bit_adder_value_dist_full.eps', format='eps')
 
-# plot_basic_logic(d=1)
+# plot_basic_logic()
 # plt.show()
 # plot_half_adder()
 # plt.show()
-# plot_full_adder(inp=(1,0,1))
+# plot_full_adder(inp=(1,1,0))
 # plt.show()
-# plot_4bit_adder(alpha=0)
+# plot_4bit_adder(alpha=0.05,beta=0.05)
 # plt.show()
-# plot_4bit_adder_dist(alpha=0,beta=0.01, d=3)
+# plot_4bit_adder_dist(alpha1=0.02,beta1=0.02,alpha2=0.05,beta2=0.05)
 # plt.show()
 
 # print_distribution()
 # check_distribution()
+
 
 gen_paper_plots()
