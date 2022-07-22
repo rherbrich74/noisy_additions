@@ -117,10 +117,10 @@ def four_bit_adder(ha_map,fa_map):
 def plot_basic_logic(alpha=0,d=4):
     """Plots the probability distributions of basic logic functions"""
     beta = np.linspace(0, 0.5, 100)
-    plt.plot(beta, [pnand(alpha,b)[(0,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='red')
-    plt.plot(beta, [pnand(alpha,b)[(0,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='blue')
-    plt.plot(beta, [pnand(alpha,b)[(1,0)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='green')
-    plt.plot(beta, [pnand(alpha,b)[(1,1)][1] for b in beta] , linestyle='-', linewidth=2.5, marker='', color='black')
+    plt.plot(beta, [pnand(alpha,b)[(0,0)][1] for b in beta], linestyle='-', linewidth=2.5, marker='', color='red')
+    plt.plot(beta, [pnand(alpha,b)[(0,1)][1] for b in beta], linestyle='-', linewidth=2.5, marker='', color='blue')
+    plt.plot(beta, [pnand(alpha,b)[(1,0)][1] for b in beta], linestyle='-', linewidth=2.5, marker='', color='green')
+    plt.plot(beta, [pnand(alpha,b)[(1,1)][1] for b in beta], linestyle='-', linewidth=2.5, marker='', color='black')
 
     plt.legend(['P(nand=1|a=0,b=0)', 'P(nand=1|a=0,b=1)', 'P(nand=1|a=1,b=0)', 'P(nand=1|a=1,b=1)'])
     plt.xlabel(r'$\beta$')
@@ -129,24 +129,16 @@ def plot_basic_logic(alpha=0,d=4):
 
     plt.grid()
 
-def plot_half_adder(inp=(1,1)):
-    """Plots the probability distributions of a half-adder"""
-    beta = np.linspace(0, 0.5, 100)
-
-    P = [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(0,0)] for b in beta]]
-    P += [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(1,0)] for b in beta]]
-    P += [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(0,1)] for b in beta]]
-    P += [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(1,1)] for b in beta]]
-    P_stack = np.cumsum(P, axis=0)
-
-    plt.fill_between(beta, 0, P_stack[0,:], facecolor="red")
-    plt.fill_between(beta, P_stack[0,:], P_stack[1,:], facecolor="blue")
-    plt.fill_between(beta, P_stack[1,:], P_stack[2,:], facecolor="green")
-    plt.fill_between(beta, P_stack[2,:], P_stack[3,:], facecolor="black")
-    plt.legend([r'P(s=0,$c_{out}$=0)',r'P(s=1,$c_{out}$=0)',r'P(s=0,$c_{out}$=1)',r'P(s=1,$c_{out}$=1)'],loc='lower right')
+def plot_half_adder_error(beta_max=0.5):
+    """Plots the probability distributions of errors for the half-adder"""
+    beta = np.linspace(0, beta_max, 100)
+    perfect_out = {k:max(v,key=v.get) for (k,v) in half_adder(pnand(0,0),pnor(0,0),pnot(0,0)).items()}
+    error = [np.average([1-v[perfect_out[k]] for (k,v) in half_adder(pnand(0,b),pnor(0,b),pnot(0,b)).items()]) \
+             for b in beta]
+    plt.plot(beta, error, linestyle='-', linewidth=2.5, marker='', color='red')
     plt.xlabel(r'$\beta$')
-    plt.ylabel(r'P(s,$c_{out}$|a=%d,b=%d)' % (inp[0],inp[1]))
-    plt.title('Probability Distribution of a half-adder')
+    plt.ylabel([r'P(error|$beta$)'])
+    plt.title('Error Probability of a half-adder')
 
     plt.grid()
 
@@ -268,5 +260,7 @@ def gen_paper_plots():
 # print_distribution()
 # check_distribution()
 
+# gen_paper_plots()
 
-gen_paper_plots()
+plot_half_adder_error(beta_max=0.01)
+plt.show()
