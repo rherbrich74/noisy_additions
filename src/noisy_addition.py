@@ -114,6 +114,17 @@ def four_bit_adder(ha_map,fa_map):
                                     out[k] = v
     return(out)
 
+def remap_4bit_adder_map(fb_map):
+    """Re-maps the keys of the 4-bit adder map to decimal numbers (rather than bit-strings)"""
+    A = np.zeros((32,256))
+    for ((a0,a1,a2,a3,b0,b1,b2,b3),v) in fb_map.items():
+        key1 = a0*1 + a1*2 + a2*4 + a3*8 + b0*16 + b1*32 + b2*64 + b3*128
+        for ((c0,c1,c2,c3,c4),p) in v.items():
+            key2 = c4*16+c3*8+c2*4+c1*2+c0
+            A[key2][key1] = p
+    return A
+
+
 def plot_basic_logic(alpha=0,d=4):
     """Plots the probability distributions of basic logic functions"""
     beta = np.linspace(0, 0.5, 100)
@@ -129,6 +140,27 @@ def plot_basic_logic(alpha=0,d=4):
 
     plt.grid()
 
+def plot_half_adder(inp=(1,1)):
+    """Plots the probability distributions of a half-adder"""
+    beta = np.linspace(0, 0.5, 100)
+
+    P = [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(0,0)] for b in beta]]
+    P += [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(1,0)] for b in beta]]
+    P += [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(0,1)] for b in beta]]
+    P += [[half_adder(pnand(0,b),pnor(0,b),pnot(0,b))[inp][(1,1)] for b in beta]]
+    P_stack = np.cumsum(P, axis=0)
+
+    plt.fill_between(beta, 0, P_stack[0,:], facecolor="red")
+    plt.fill_between(beta, P_stack[0,:], P_stack[1,:], facecolor="blue")
+    plt.fill_between(beta, P_stack[1,:], P_stack[2,:], facecolor="green")
+    plt.fill_between(beta, P_stack[2,:], P_stack[3,:], facecolor="black")
+    plt.legend([r'P(s=0,$c_{out}$=0)',r'P(s=1,$c_{out}$=0)',r'P(s=0,$c_{out}$=1)',r'P(s=1,$c_{out}$=1)'],loc='lower right')
+    plt.xlabel(r'$\beta$')
+    plt.ylabel(r'P(s,$c_{out}$|a=%d,b=%d)' % (inp[0],inp[1]))
+    plt.title('Probability Distribution of a half-adder')
+
+    plt.grid()
+
 def plot_half_adder_error(beta_max=0.5):
     """Plots the probability distributions of errors for the half-adder"""
     beta = np.linspace(0, beta_max, 100)
@@ -137,7 +169,7 @@ def plot_half_adder_error(beta_max=0.5):
              for b in beta]
     plt.plot(beta, error, linestyle='-', linewidth=2.5, marker='', color='red')
     plt.xlabel(r'$\beta$')
-    plt.ylabel([r'P(error|$beta$)'])
+    plt.ylabel(r'P(error|$\beta$)')
     plt.title('Error Probability of a half-adder')
 
     plt.grid()
@@ -163,6 +195,19 @@ def plot_full_adder(inp=(1,0,1)):
 
     plt.grid()
 
+def plot_full_adder_error(beta_max=0.5):
+    """Plots the probability distributions of errors for the full-adder"""
+    beta = np.linspace(0, beta_max, 100)
+    perfect_out = {k:max(v,key=v.get) for (k,v) in full_adder(half_adder(pnand(0,0),pnor(0,0),pnot(0,0)),pnor(0,0),pnot(0,0)).items()}
+    error = [np.average([1-v[perfect_out[k]] for (k,v) in full_adder(half_adder(pnand(0,b),pnor(0,b),pnot(0,b)),pnor(0,b),pnot(0,b)).items()]) \
+             for b in beta]
+    plt.plot(beta, error, linestyle='-', linewidth=2.5, marker='', color='red')
+    plt.xlabel(r'$\beta$')
+    plt.ylabel(r'P(error|$\beta$)')
+    plt.title('Error Probability of a full-adder')
+
+    plt.grid()
+
 def plot_4bit_adder(alpha = 0, beta = 0.15, a = 14, b = 7):
     """Plots the distribution of sums of the 4bit adder for two specific inputs"""
     ha_map = half_adder(pnand(alpha,beta),pnor(alpha,beta),pnot(alpha,beta))
@@ -179,29 +224,20 @@ def plot_4bit_adder(alpha = 0, beta = 0.15, a = 14, b = 7):
 
 def plot_4bit_adder_dist(alpha1 = 0, beta1 = 0.05, alpha2 = 0, beta2 = 0.1):
     """Plots the whole distribution of the 4bit adders"""
-    def compute_map(fb_map):
-        A = np.zeros((32,256))
-        for ((a0,a1,a2,a3,b0,b1,b2,b3),v) in fb_map.items():
-            key1 = a0*1 + a1*2 + a2*4 + a3*8 + b0*16 + b1*32 + b2*64 + b3*128
-            for ((c0,c1,c2,c3,c4),p) in v.items():
-                key2 = c4*16+c3*8+c2*4+c1*2+c0
-                A[key2][key1] = p
-        return A
-
     ha_map0 = half_adder(pnand(0,0),pnor(0,0),pnot(0,0))
     fa_map0 = full_adder(ha_map0,pnor(0,0),pnot(0,0))
     fb_map0 = four_bit_adder(ha_map0,fa_map0)
-    A0 = compute_map(fb_map0)
+    A0 = remap_4bit_adder_map(fb_map0)
 
     ha_map1 = half_adder(pnand(alpha1,beta1),pnor(alpha1,beta1),pnot(alpha1,beta1))
     fa_map1 = full_adder(ha_map1,pnor(alpha1,beta1),pnot(alpha1,beta1))
     fb_map1 = four_bit_adder(ha_map1,fa_map1)
-    A1 = compute_map(fb_map1)
+    A1 = remap_4bit_adder_map(fb_map1)
 
     ha_map2 = half_adder(pnand(alpha2,beta2),pnor(alpha2,beta2),pnot(alpha2,beta2))
     fa_map2 = full_adder(ha_map2,pnor(alpha2,beta2),pnot(alpha2,beta2))
     fb_map2 = four_bit_adder(ha_map2,fa_map2)
-    A2 = compute_map(fb_map2)
+    A2 = remap_4bit_adder_map(fb_map2)
 
     fig, axs = plt.subplots(3)
     # fig.suptitle('4-bit Adder Output Distribution for all 256 inputs to {0,..,31}')
@@ -211,6 +247,30 @@ def plot_4bit_adder_dist(alpha1 = 0, beta1 = 0.05, alpha2 = 0, beta2 = 0.1):
     axs[1].title.set_text(r'$\alpha$={0}, $\beta$={1}'.format(alpha1,beta1))
     axs[2].matshow(A2)
     axs[2].title.set_text(r'$\alpha$={0}, $\beta$={1}'.format(alpha2,beta2))
+
+def plot_4bit_adder_error(beta_max=0.5):
+    """Plots the probability distributions of errors for the full-adder"""
+    ha_map0 = half_adder(pnand(0,0),pnor(0,0),pnot(0,0))
+    fa_map0 = full_adder(ha_map0,pnor(0,0),pnot(0,0))
+    fb_map0 = four_bit_adder(ha_map0,fa_map0)
+    A0 = remap_4bit_adder_map(fb_map0)
+    correct_output = np.argmax(A0,axis=0)
+
+    beta = np.linspace(0, beta_max, 100)
+    error = np.zeros(np.shape(beta))
+    for i in range(len(beta)):
+        ha_map1 = half_adder(pnand(0,beta[i]),pnor(0,beta[i]),pnot(0,beta[i]))
+        fa_map1 = full_adder(ha_map1,pnor(0,beta[i]),pnot(0,beta[i]))
+        fb_map1 = four_bit_adder(ha_map1,fa_map1)
+        A1 = remap_4bit_adder_map(fb_map1)
+        error[i] = np.average(1.0-A1[correct_output,np.arange(256)])
+
+    plt.plot(beta, error, linestyle='-', linewidth=2.5, marker='', color='red')
+    plt.xlabel(r'$\beta$')
+    plt.ylabel(r'P(error|$\beta$)')
+    plt.title('Error Probability of a 4bit-adder')
+
+    plt.grid()
 
 def print_distribution(p_map = full_adder(half_adder(pnand(0,0),pnor(0,0),pnot(0,0)),pnor(0,0),pnot(0,0))):
     """Outputs a probabilistic logic function on screen"""
@@ -262,5 +322,23 @@ def gen_paper_plots():
 
 # gen_paper_plots()
 
+plot_half_adder_error(beta_max=0.5)
+plt.show()
+plot_full_adder_error(beta_max=0.5)
+plt.show()
+plot_4bit_adder_error(beta_max=0.5)
+plt.show()
+
+plot_half_adder_error(beta_max=0.05)
+plt.show()
+plot_full_adder_error(beta_max=0.05)
+plt.show()
+plot_4bit_adder_error(beta_max=0.05)
+plt.show()
+
 plot_half_adder_error(beta_max=0.01)
+plt.show()
+plot_full_adder_error(beta_max=0.01)
+plt.show()
+plot_4bit_adder_error(beta_max=0.01)
 plt.show()
