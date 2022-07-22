@@ -248,7 +248,7 @@ def plot_4bit_adder_dist(alpha1 = 0, beta1 = 0.05, alpha2 = 0, beta2 = 0.1):
     axs[2].matshow(A2)
     axs[2].title.set_text(r'$\alpha$={0}, $\beta$={1}'.format(alpha2,beta2))
 
-def plot_4bit_adder_error(beta_max=0.5):
+def plot_4bit_adder_error(beta_max=0.5,mape_error=False):
     """Plots the probability distributions of errors for the full-adder"""
     ha_map0 = half_adder(pnand(0,0),pnor(0,0),pnot(0,0))
     fa_map0 = full_adder(ha_map0,pnor(0,0),pnot(0,0))
@@ -263,12 +263,21 @@ def plot_4bit_adder_error(beta_max=0.5):
         fa_map1 = full_adder(ha_map1,pnor(0,beta[i]),pnot(0,beta[i]))
         fb_map1 = four_bit_adder(ha_map1,fa_map1)
         A1 = remap_4bit_adder_map(fb_map1)
-        error[i] = np.average(1.0-A1[correct_output,np.arange(256)])
+        if (mape_error):
+            error[i] = np.average(np.sum(abs(np.reshape(np.repeat(np.arange(32),256),(32,256)) - \
+                                             np.reshape(np.tile(correct_output,32),(32,256)))*A1, axis=0))
+        else:
+            error[i] = np.average(1.0-A1[correct_output,np.arange(256)])
 
     plt.plot(beta, error, linestyle='-', linewidth=2.5, marker='', color='red')
+
     plt.xlabel(r'$\beta$')
-    plt.ylabel(r'P(error|$\beta$)')
-    plt.title('Error Probability of a 4bit-adder')
+    if (mape_error):
+        plt.ylabel(r'P(MAPE error|$\beta$)')
+        plt.title('Expected L1 Error of a 4bit-adder')
+    else:
+        plt.ylabel(r'P(error|$\beta$)')
+        plt.title('Error Probability of a 4bit-adder')
 
     plt.grid()
 
@@ -308,6 +317,7 @@ def gen_paper_plots():
 
 # plot_basic_logic()
 # plt.show()
+
 # plot_half_adder()
 # plt.show()
 # plot_full_adder(inp=(1,1,0))
@@ -317,28 +327,16 @@ def gen_paper_plots():
 # plot_4bit_adder_dist(alpha1=0.02,beta1=0.02,alpha2=0.05,beta2=0.05)
 # plt.show()
 
+# plot_half_adder_error(beta_max=0.5)
+# plt.show()
+# plot_full_adder_error(beta_max=0.5)
+# plt.show()
+# plot_4bit_adder_error(beta_max=0.5)
+# plt.show()
+# plot_4bit_adder_error(beta_max=0.5, mape_error=True)
+# plt.show()
+
 # print_distribution()
 # check_distribution()
 
 # gen_paper_plots()
-
-plot_half_adder_error(beta_max=0.5)
-plt.show()
-plot_full_adder_error(beta_max=0.5)
-plt.show()
-plot_4bit_adder_error(beta_max=0.5)
-plt.show()
-
-plot_half_adder_error(beta_max=0.05)
-plt.show()
-plot_full_adder_error(beta_max=0.05)
-plt.show()
-plot_4bit_adder_error(beta_max=0.05)
-plt.show()
-
-plot_half_adder_error(beta_max=0.01)
-plt.show()
-plot_full_adder_error(beta_max=0.01)
-plt.show()
-plot_4bit_adder_error(beta_max=0.01)
-plt.show()
