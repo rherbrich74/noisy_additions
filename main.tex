@@ -39,7 +39,7 @@
 
 \title{On Noisy Additions}
 
-\date{July 20, 2022}		% Here you can change the date presented in the paper title
+\date{July 21, 2022}		% Here you can change the date presented in the paper title
 
 \author{Ralf Herbrich \\
 	Hasso-Plattner Institute\\
@@ -65,7 +65,11 @@ pdfkeywords={electrical circuits, information theory},
 \maketitle
 
 \begin{abstract}
-	So far, most of algorithmic development has relied on the concept of {\em correct computing}, in particular at the level of the basic compute unit: the arithmetic logical unit (ALU). With the rapid rise of machine learning (ML) and artificial intelligence (AI) systems, {\em correct computing} is no longer strictly required as almost all ML and AI algorithm are based on numerical approximations of (cost) minimization problems. On the other hand, energy-efficiency is becoming increasingly important. While current research into energy-efficient ML/AI focuses on {\em approximate representations} of numbers (e.g., $k$-bit deep neural networks), we will explore the idea of {\em approximate computing} resulting out of under-powering the ALU of a processor. In this note, we will both analytically derive the distribution over integers resulting from under-powering an ALU as well as propose a number of ALU circuit designs which reduce the variation in outputs of an approximate addition. Finally, we will present real-world results of the proposed ALU concept by implementing it on a field-programmable array and comparing it to our analytical results.
+	So far, most of algorithmic development has relied on the concept of {\em correct computing}, in particular at the level of the basic compute unit: the arithmetic logical unit (ALU). With the rapid rise of machine learning (ML) and artificial intelligence (AI) systems, {\em correct computing} is no longer strictly required as almost all ML and AI algorithm are based on numerical approximations of (cost) minimization problems. On the other hand, energy-efficiency is becoming increasingly important. While current research into energy-efficient ML/AI focuses on {\em approximate representations} of numbers (e.g., $k$-bit deep neural networks), we will explore the idea of {\em approximate computing} resulting out of under-powering the ALU of a processor. 
+	
+	In this note, we will analytically derive the distribution over integers resulting from under-powering an ALU using message-passing to efficiently compute these distributions. One application of knowing this characterization is to use under-powered ALUs to {\em directly} implement probabilistic programs where the distribution parameters are directly controlled by the CMOS supply voltage. 
+	
+% 	In this note, we will both analytically derive the distribution over integers resulting from under-powering an ALU as well as propose a number of ALU circuit designs which reduce the variation in outputs of an approximate addition. Finally, we will present real-world results of the proposed ALU concept by implementing it on a field-programmable array and comparing it to our analytical results.
 \end{abstract}
 
 
@@ -79,15 +83,15 @@ pdfkeywords={electrical circuits, information theory},
 \section{Arithmetic Logic Units and Adders}
 \input{adder.tex}
 
-\section{A Noise Model for Adder}
+\section{A Noise Model for Adders}
 \input{noisy_adders.tex}
 
 % \section{k--Redundant Approximate Adders}
 % \input{redundant_adders.tex}
 
-\section{Experimental Results}
+% \section{Experimental Results}
 
-\section{Conclusion}
+% \section{Conclusion}
 
 \appendix
 \input{appendix.tex}
