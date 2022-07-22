@@ -114,6 +114,51 @@ def four_bit_adder(ha_map,fa_map):
                                     out[k] = v
     return(out)
 
+def six_bit_adder(ha_map,fa_map):
+    """Computes the distribution of the output of a 6-bit adder"""
+    def compute_p(a0,a1,a2,a3,a4,a5,b0,b1,b2,b3,b4,b5,s0,s1,s2,s3,s4,s5,c5_out):
+        p = 0
+        for c0_out in [0,1]:
+            for c1_out in [0,1]:
+                for c2_out in [0,1]:
+                    for c3_out in [0,1]:
+                        for c4_out in [0,1]:
+                            p = p + \
+                                ha_map[(a0,b0)]       [(s0,c0_out)] * \
+                                fa_map[(a1,b1,c0_out)][(s1,c1_out)] * \
+                                fa_map[(a2,b2,c1_out)][(s2,c2_out)] * \
+                                fa_map[(a3,b3,c2_out)][(s3,c3_out)] * \
+                                fa_map[(a4,b4,c3_out)][(s4,c4_out)] * \
+                                fa_map[(a5,b5,c4_out)][(s5,c5_out)] 
+        return p
+
+    out = {}
+    for a0 in [0,1]:
+        for a1 in [0,1]:
+            for a2 in [0,1]:
+                for a3 in [0,1]:
+                    for a4 in [0,1]:
+                        for a5 in [0,1]:
+                            for b0 in [0,1]:
+                                for b1 in [0,1]:
+                                    for b2 in [0,1]:
+                                        for b3 in [0,1]:
+                                            for b4 in [0,1]:
+                                                for b5 in [0,1]:
+                                                    k = (a0,a1,a2,a3,a4,a5,b0,b1,b2,b3,b4,b5)
+                                                    v = {}
+                                                    for s0 in [0,1]:
+                                                        for s1 in [0,1]:
+                                                            for s2 in [0,1]:
+                                                                for s3 in [0,1]:
+                                                                    for s4 in [0,1]:
+                                                                        for s5 in [0,1]:
+                                                                            for c5_out in [0,1]:
+                                                                                kv = (s0,s1,s2,s3,s4,s5,c5_out)
+                                                                                v[kv] = compute_p(a0,a1,a2,a3,a4,a5,b0,b1,b2,b3,b4,b5,s0,s1,s2,s3,s4,s5,c5_out)
+                                                    out[k] = v
+    return(out)
+
 def remap_4bit_adder_map(fb_map):
     """Re-maps the keys of the 4-bit adder map to decimal numbers (rather than bit-strings)"""
     A = np.zeros((32,256))
@@ -124,6 +169,15 @@ def remap_4bit_adder_map(fb_map):
             A[key2][key1] = p
     return A
 
+def remap_6bit_adder_map(fb_map):
+    """Re-maps the keys of the 6-bit adder map to decimal numbers (rather than bit-strings)"""
+    A = np.zeros((128,4096))
+    for ((a0,a1,a2,a3,a4,a5,b0,b1,b2,b3,b4,b5),v) in fb_map.items():
+        key1 = a0*1 + a1*2 + a2*4 + a3*8 + a4*16 + a5*32 + b0*64 + b1*128 + b2*256 + b3*512 + b4*1024 + b5*2048
+        for ((c0,c1,c2,c3,c4,c5,c6),p) in v.items():
+            key2 = c6*64+c5*32+c4*16+c3*8+c2*4+c1*2+c0
+            A[key2][key1] = p
+    return A
 
 def plot_basic_logic(alpha=0,d=4):
     """Plots the probability distributions of basic logic functions"""
@@ -249,7 +303,7 @@ def plot_4bit_adder_dist(alpha1 = 0, beta1 = 0.05, alpha2 = 0, beta2 = 0.1):
     axs[2].title.set_text(r'$\alpha$={0}, $\beta$={1}'.format(alpha2,beta2))
 
 def plot_4bit_adder_error(beta_max=0.5,mape_error=False):
-    """Plots the probability distributions of errors for the full-adder"""
+    """Plots the probability distributions of errors for the 4bit-adder"""
     ha_map0 = half_adder(pnand(0,0),pnor(0,0),pnot(0,0))
     fa_map0 = full_adder(ha_map0,pnor(0,0),pnot(0,0))
     fb_map0 = four_bit_adder(ha_map0,fa_map0)
@@ -269,15 +323,38 @@ def plot_4bit_adder_error(beta_max=0.5,mape_error=False):
         else:
             error[i] = np.average(1.0-A1[correct_output,np.arange(256)])
 
+def plot_6bit_adder_error(beta_max=0.5,mape_error=False):
+    """Plots the probability distributions of errors for the 6bit-adder"""
+    ha_map0 = half_adder(pnand(0,0),pnor(0,0),pnot(0,0))
+    fa_map0 = full_adder(ha_map0,pnor(0,0),pnot(0,0))
+    sb_map0 = six_bit_adder(ha_map0,fa_map0)
+    A0 = remap_6bit_adder_map(sb_map0)
+    correct_output = np.argmax(A0,axis=0)
+
+    beta = np.linspace(0, beta_max, 50)
+    error = np.zeros(np.shape(beta))
+    for i in range(len(beta)):
+        print(i)
+        ha_map1 = half_adder(pnand(0,beta[i]),pnor(0,beta[i]),pnot(0,beta[i]))
+        fa_map1 = full_adder(ha_map1,pnor(0,beta[i]),pnot(0,beta[i]))
+        sb_map1 = six_bit_adder(ha_map1,fa_map1)
+        A1 = remap_6bit_adder_map(sb_map1)
+        if (mape_error):
+            error[i] = np.average(np.sum(abs(np.reshape(np.repeat(np.arange(128),4096),(128,4096)) - \
+                                             np.reshape(np.tile(correct_output,128),(128,4096)))*A1, axis=0))
+        else:
+            error[i] = np.average(1.0-A1[correct_output,np.arange(4096)])
+
+
     plt.plot(beta, error, linestyle='-', linewidth=2.5, marker='', color='red')
 
     plt.xlabel(r'$\beta$')
     if (mape_error):
         plt.ylabel(r'P(MAPE error|$\beta$)')
-        plt.title('Expected L1 Error of a 4bit-adder')
+        plt.title('Expected L1 Error of a 6bit-adder')
     else:
         plt.ylabel(r'P(error|$\beta$)')
-        plt.title('Error Probability of a 4bit-adder')
+        plt.title('Error Probability of a 6bit-adder')
 
     plt.grid()
 
@@ -335,8 +412,11 @@ def gen_paper_plots():
 # plt.show()
 # plot_4bit_adder_error(beta_max=0.5, mape_error=True)
 # plt.show()
+# plot_6bit_adder_error(beta_max=0.5, mape_error=True)               # This takes a long time!
+# plt.show()
 
 # print_distribution()
 # check_distribution()
 
 # gen_paper_plots()
+
