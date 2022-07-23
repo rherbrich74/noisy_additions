@@ -161,6 +161,61 @@ def six_bit_adder(ha_map,fa_map):
             out[k] = v
     return(out)
 
+def four_bit_full_adder(fa_map):
+    """Computes the distribution of the output of a 4-bit adder using full-bit adders"""
+    out = {}
+    for A in range(16):
+        for B in range(16):
+            for c_in in [0,1]:
+                a0 = A & 1
+                a1 = (A>>1) & 1
+                a2 = (A>>2) & 1
+                a3 = (A>>3) & 1
+                b0 = B & 1
+                b1 = (B>>1) & 1
+                b2 = (B>>2) & 1
+                b3 = (B>>3) & 1
+                k = (A,B,c_in)
+                v = {}
+                for S in range(32):
+                    s0 = S & 1
+                    s1 = (S>>1) & 1
+                    s2 = (S>>2) & 1
+                    s3 = (S>>3) & 1
+                    c3_out = (S>>4) & 1
+                    kv = S
+                    p = 0
+                    for c0_out in [0,1]:
+                        for c1_out in [0,1]:
+                            for c2_out in [0,1]:
+                                p = p + \
+                                    fa_map[(a0,b0,c_in)]  [(s0,c0_out)] * \
+                                    fa_map[(a1,b1,c0_out)][(s1,c1_out)] * \
+                                    fa_map[(a2,b2,c1_out)][(s2,c2_out)] * \
+                                    fa_map[(a3,b3,c2_out)][(s3,c3_out)]
+                    v[kv] = p
+                out[k] = v
+    return(out)
+
+def eight_bit_adder(f4a_map):
+    """Computes the distribution of the output of a 4-bit adder using full-bit adders"""
+    out = {}
+    for A in range(256):
+        for B in range(256):
+            for c_in in [0,1]:
+                k = (A,B,c_in)
+                v = {}
+                for S in range(512):
+                    kv = S
+                    p = 0
+                    for c_out in [0,1]:
+                        p = p + \
+                            f4a_map[((A & 15),(B & 15),c_in)] [(S & 15) + c_out*16] * \
+                            f4a_map[((A >> 4),(B >> 4),c_out)][(S >> 4)] 
+                    v[kv] = p
+                out[k] = v
+    return(out)
+
 def remap_adder_map(fb_map):
     """Re-maps the keys of the 4-bit adder map to a matrix"""
     shift = len(fb_map[(0,0)]) >> 1
