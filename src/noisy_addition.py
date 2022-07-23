@@ -118,68 +118,56 @@ def four_bit_adder(ha_map,fa_map):
     return(out)
 
 def six_bit_adder(ha_map,fa_map):
-    """Computes the distribution of the output of a 6-bit adder"""
-    def compute_p(a0,a1,a2,a3,a4,a5,b0,b1,b2,b3,b4,b5,s0,s1,s2,s3,s4,s5,c5_out):
-        p = 0
-        for c0_out in [0,1]:
-            for c1_out in [0,1]:
-                for c2_out in [0,1]:
-                    for c3_out in [0,1]:
-                        for c4_out in [0,1]:
-                            p = p + \
-                                ha_map[(a0,b0)]       [(s0,c0_out)] * \
-                                fa_map[(a1,b1,c0_out)][(s1,c1_out)] * \
-                                fa_map[(a2,b2,c1_out)][(s2,c2_out)] * \
-                                fa_map[(a3,b3,c2_out)][(s3,c3_out)] * \
-                                fa_map[(a4,b4,c3_out)][(s4,c4_out)] * \
-                                fa_map[(a5,b5,c4_out)][(s5,c5_out)] 
-        return p
-
     out = {}
-    for a0 in [0,1]:
-        for a1 in [0,1]:
-            for a2 in [0,1]:
-                for a3 in [0,1]:
-                    for a4 in [0,1]:
-                        for a5 in [0,1]:
-                            for b0 in [0,1]:
-                                for b1 in [0,1]:
-                                    for b2 in [0,1]:
-                                        for b3 in [0,1]:
-                                            for b4 in [0,1]:
-                                                for b5 in [0,1]:
-                                                    k = (a0,a1,a2,a3,a4,a5,b0,b1,b2,b3,b4,b5)
-                                                    v = {}
-                                                    for s0 in [0,1]:
-                                                        for s1 in [0,1]:
-                                                            for s2 in [0,1]:
-                                                                for s3 in [0,1]:
-                                                                    for s4 in [0,1]:
-                                                                        for s5 in [0,1]:
-                                                                            for c5_out in [0,1]:
-                                                                                kv = (s0,s1,s2,s3,s4,s5,c5_out)
-                                                                                v[kv] = compute_p(a0,a1,a2,a3,a4,a5,b0,b1,b2,b3,b4,b5,s0,s1,s2,s3,s4,s5,c5_out)
-                                                    out[k] = v
+    for A in range(64):
+        for B in range(64):
+            a0 = A & 1
+            a1 = (A>>1) & 1
+            a2 = (A>>2) & 1
+            a3 = (A>>3) & 1
+            a4 = (A>>4) & 1
+            a5 = (A>>5) & 1
+            b0 = B & 1
+            b1 = (B>>1) & 1
+            b2 = (B>>2) & 1
+            b3 = (B>>3) & 1
+            b4 = (B>>4) & 1
+            b5 = (B>>5) & 1
+            k = (A,B)
+            v = {}
+            for S in range(128):
+                s0 = S & 1
+                s1 = (S>>1) & 1
+                s2 = (S>>2) & 1
+                s3 = (S>>3) & 1
+                s4 = (S>>4) & 1
+                s5 = (S>>5) & 1
+                c5_out = (S>>6) & 1
+                kv = S
+                p = 0
+                for c0_out in [0,1]:
+                    for c1_out in [0,1]:
+                        for c2_out in [0,1]:
+                            for c3_out in [0,1]:
+                                for c4_out in [0,1]:
+                                    p = p + \
+                                        ha_map[(a0,b0)]       [(s0,c0_out)] * \
+                                        fa_map[(a1,b1,c0_out)][(s1,c1_out)] * \
+                                        fa_map[(a2,b2,c1_out)][(s2,c2_out)] * \
+                                        fa_map[(a3,b3,c2_out)][(s3,c3_out)] * \
+                                        fa_map[(a4,b4,c3_out)][(s4,c4_out)] * \
+                                        fa_map[(a5,b5,c4_out)][(s5,c5_out)] 
+                v[kv] = p
+            out[k] = v
     return(out)
 
-def remap_4bit_adder_map(fb_map):
-    """Re-maps the keys of the 4-bit adder map to decimal numbers (rather than bit-strings)"""
-    A = np.zeros((32,256))
-    for ((a0,a1,a2,a3,b0,b1,b2,b3),v) in fb_map.items():
-        key1 = a0*1 + a1*2 + a2*4 + a3*8 + b0*16 + b1*32 + b2*64 + b3*128
-        for ((c0,c1,c2,c3,c4),p) in v.items():
-            key2 = c4*16+c3*8+c2*4+c1*2+c0
-            A[key2][key1] = p
-    return A
-
-def remap_6bit_adder_map(fb_map):
-    """Re-maps the keys of the 6-bit adder map to decimal numbers (rather than bit-strings)"""
-    A = np.zeros((128,4096))
-    for ((a0,a1,a2,a3,a4,a5,b0,b1,b2,b3,b4,b5),v) in fb_map.items():
-        key1 = a0*1 + a1*2 + a2*4 + a3*8 + a4*16 + a5*32 + b0*64 + b1*128 + b2*256 + b3*512 + b4*1024 + b5*2048
-        for ((c0,c1,c2,c3,c4,c5,c6),p) in v.items():
-            key2 = c6*64+c5*32+c4*16+c3*8+c2*4+c1*2+c0
-            A[key2][key1] = p
+def remap_adder_map(fb_map):
+    """Re-maps the keys of the 4-bit adder map to a matrix"""
+    shift = len(fb_map[(0,0)]) >> 1
+    A = np.zeros((len(fb_map[(0,0)]),len(fb_map)))
+    for ((a,b),v) in fb_map.items():
+        for (s,p) in v.items():
+            A[s][a*shift+b] = p
     return A
 
 def plot_basic_logic(alpha=0,d=4):
@@ -271,8 +259,7 @@ def plot_4bit_adder(alpha = 0, beta = 0.15, a = 14, b = 7):
     fa_map = full_adder(ha_map,pnor(alpha,beta),pnot(alpha,beta))
     fb_map = four_bit_adder(ha_map,fa_map)
 
-    key = (a & 1, (a>>1) & 1, (a>>2) & 1, (a>>3) & 1,b & 1, (b>>1) & 1, (b>>2) & 1, (b>>3) & 1)
-    hist = dict(sorted({ c4*16+c3*8+c2*4+c1*2+c0: v for ((c0,c1,c2,c3,c4),v) in fb_map[key].items() }.items()))
+    hist = dict(sorted({ k: v for (k,v) in fb_map[(a,b)].items() }.items()))
 
     plt.bar(hist.keys(), hist.values())
     plt.xlabel(r'sum')
@@ -284,17 +271,17 @@ def plot_4bit_adder_dist(alpha1 = 0, beta1 = 0.05, alpha2 = 0, beta2 = 0.1):
     ha_map0 = half_adder(pnand(0,0),pnor(0,0),pnot(0,0))
     fa_map0 = full_adder(ha_map0,pnor(0,0),pnot(0,0))
     fb_map0 = four_bit_adder(ha_map0,fa_map0)
-    A0 = remap_4bit_adder_map(fb_map0)
+    A0 = remap_adder_map(fb_map0)
 
     ha_map1 = half_adder(pnand(alpha1,beta1),pnor(alpha1,beta1),pnot(alpha1,beta1))
     fa_map1 = full_adder(ha_map1,pnor(alpha1,beta1),pnot(alpha1,beta1))
     fb_map1 = four_bit_adder(ha_map1,fa_map1)
-    A1 = remap_4bit_adder_map(fb_map1)
+    A1 = remap_adder_map(fb_map1)
 
     ha_map2 = half_adder(pnand(alpha2,beta2),pnor(alpha2,beta2),pnot(alpha2,beta2))
     fa_map2 = full_adder(ha_map2,pnor(alpha2,beta2),pnot(alpha2,beta2))
     fb_map2 = four_bit_adder(ha_map2,fa_map2)
-    A2 = remap_4bit_adder_map(fb_map2)
+    A2 = remap_adder_map(fb_map2)
 
     fig, axs = plt.subplots(3)
     # fig.suptitle('4-bit Adder Output Distribution for all 256 inputs to {0,..,31}')
@@ -305,59 +292,51 @@ def plot_4bit_adder_dist(alpha1 = 0, beta1 = 0.05, alpha2 = 0, beta2 = 0.1):
     axs[2].matshow(A2)
     axs[2].title.set_text(r'$\alpha$={0}, $\beta$={1}'.format(alpha2,beta2))
 
-def plot_4bit_adder_error(beta_max=0.5,mape_error=False):
+def plot_kbit_adder_error(beta_max=0.5,mape_error=False,bits=4,n=100):
     """Plots the probability distributions of errors for the 4bit-adder"""
     ha_map0 = half_adder(pnand(0,0),pnor(0,0),pnot(0,0))
     fa_map0 = full_adder(ha_map0,pnor(0,0),pnot(0,0))
-    fb_map0 = four_bit_adder(ha_map0,fa_map0)
-    A0 = remap_4bit_adder_map(fb_map0)
+    if (bits == 4):
+        ba_map0 = four_bit_adder(ha_map0,fa_map0)
+    else:
+        ba_map0 = six_bit_adder(ha_map0,fa_map0)
+    A0 = remap_adder_map(ba_map0)
     correct_output = np.argmax(A0,axis=0)
 
-    beta = np.linspace(0, beta_max, 100)
+    beta = np.linspace(0, beta_max, n)
     error = np.zeros(np.shape(beta))
     for i in range(len(beta)):
         ha_map1 = half_adder(pnand(0,beta[i]),pnor(0,beta[i]),pnot(0,beta[i]))
         fa_map1 = full_adder(ha_map1,pnor(0,beta[i]),pnot(0,beta[i]))
-        fb_map1 = four_bit_adder(ha_map1,fa_map1)
-        A1 = remap_4bit_adder_map(fb_map1)
-        if (mape_error):
-            error[i] = np.average(np.sum(abs(np.reshape(np.repeat(np.arange(32),256),(32,256)) - \
-                                             np.reshape(np.tile(correct_output,32),(32,256)))*A1, axis=0))
+        if (bits == 4):
+            ba_map1 = four_bit_adder(ha_map1,fa_map1)
         else:
-            error[i] = np.average(1.0-A1[correct_output,np.arange(256)])
+            ba_map1 = six_bit_adder(ha_map1,fa_map1)
+        A1 = remap_adder_map(ba_map1)
+        out = len(ba_map1[(0,0)])
+        inp = len(ba_map1)
 
-def plot_6bit_adder_error(beta_max=0.5,mape_error=False):
-    """Plots the probability distributions of errors for the 6bit-adder"""
-    ha_map0 = half_adder(pnand(0,0),pnor(0,0),pnot(0,0))
-    fa_map0 = full_adder(ha_map0,pnor(0,0),pnot(0,0))
-    sb_map0 = six_bit_adder(ha_map0,fa_map0)
-    A0 = remap_6bit_adder_map(sb_map0)
-    correct_output = np.argmax(A0,axis=0)
-
-    beta = np.linspace(0, beta_max, 50)
-    error = np.zeros(np.shape(beta))
-    for i in range(len(beta)):
-        print(i)
-        ha_map1 = half_adder(pnand(0,beta[i]),pnor(0,beta[i]),pnot(0,beta[i]))
-        fa_map1 = full_adder(ha_map1,pnor(0,beta[i]),pnot(0,beta[i]))
-        sb_map1 = six_bit_adder(ha_map1,fa_map1)
-        A1 = remap_6bit_adder_map(sb_map1)
         if (mape_error):
-            error[i] = np.average(np.sum(abs(np.reshape(np.repeat(np.arange(128),4096),(128,4096)) - \
-                                             np.reshape(np.tile(correct_output,128),(128,4096)))*A1, axis=0))
+            error[i] = np.average(np.sum(abs(np.reshape(np.repeat(np.arange(out),inp),(out,inp)) - \
+                                             np.reshape(np.tile(correct_output,out),(out,inp)))*A1, axis=0))
         else:
-            error[i] = np.average(1.0-A1[correct_output,np.arange(4096)])
-
+            error[i] = np.average(1.0-A1[correct_output,np.arange(out)])
 
     plt.plot(beta, error, linestyle='-', linewidth=2.5, marker='', color='red')
 
     plt.xlabel(r'$\beta$')
     if (mape_error):
         plt.ylabel(r'P(MAPE error|$\beta$)')
-        plt.title('Expected L1 Error of a 6bit-adder')
+        if (bits == 4):
+            plt.title('Expected L1 Error of a 4bit-adder')
+        else:
+            plt.title('Expected L1 Error of a 6bit-adder')
     else:
         plt.ylabel(r'P(error|$\beta$)')
-        plt.title('Error Probability of a 6bit-adder')
+        if (bits == 4):
+            plt.title('Error Probability of a 4bit-adder')
+        else:
+            plt.title('Error Probability of a 6bit-adder')
 
     plt.grid()
 
@@ -411,32 +390,16 @@ def gen_paper_plots():
 # plt.show()
 # plot_full_adder_error(beta_max=0.5)
 # plt.show()
-# plot_4bit_adder_error(beta_max=0.5)
+# plot_kbit_adder_error(beta_max=0.5, mape_error=False,bits=4,n=100)
 # plt.show()
-# plot_4bit_adder_error(beta_max=0.5, mape_error=True)
+# plot_kbit_adder_error(beta_max=0.5, mape_error=True,bits=4,n=100)
 # plt.show()
-# plot_6bit_adder_error(beta_max=0.5, mape_error=True)               # This takes a long time!
+# plot_kbit_adder_error(beta_max=0.5, mape_error=False,bits=6,n=25)   # This takes a long time!
+# plt.show()
+# plot_kbit_adder_error(beta_max=0.5, mape_error=True,bits=6,n=25)    # This takes a long time!
 # plt.show()
 
 # print_distribution()
 # check_distribution()
 
 # gen_paper_plots()
-
-"""Plots the distribution of sums of the 4bit adder for two specific inputs"""
-alpha = 0
-beta = 0.1
-a = 3
-b = 4
-ha_map = half_adder(pnand(alpha,beta),pnor(alpha,beta),pnot(alpha,beta))
-fa_map = full_adder(ha_map,pnor(alpha,beta),pnot(alpha,beta))
-fb_map = four_bit_adder(ha_map,fa_map)
-
-key = (a & 1, (a>>1) & 1, (a>>2) & 1, (a>>3) & 1,b & 1, (b>>1) & 1, (b>>2) & 1, (b>>3) & 1)
-hist = dict(sorted({ k: v for (k,v) in fb_map[(a,b)].items() }.items()))
-
-plt.bar(hist.keys(), hist.values())
-plt.xlabel(r'sum')
-plt.ylabel('P(sum|a={0},b={1})'.format(a,b))
-plt.title(r'Probability Distribution over sum of {0} and {1} ($\alpha$={2},$\beta$={3})'.format(a,b,alpha,beta))
-plt.show()
