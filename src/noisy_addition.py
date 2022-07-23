@@ -85,33 +85,36 @@ def full_adder(ha_map,nor_map,not_map):
 def four_bit_adder(ha_map,fa_map):
     """Computes the distribution of the output of a 4-bit adder"""
     out = {}
-    for a0 in [0,1]:
-        for a1 in [0,1]:
-            for a2 in [0,1]:
-                for a3 in [0,1]:
-                    for b0 in [0,1]:
-                        for b1 in [0,1]:
-                            for b2 in [0,1]:
-                                for b3 in [0,1]:
-                                    k = (a0,a1,a2,a3,b0,b1,b2,b3)
-                                    v = {}
-                                    for s0 in [0,1]:
-                                        for s1 in [0,1]:
-                                            for s2 in [0,1]:
-                                                for s3 in [0,1]:
-                                                    for c3_out in [0,1]:
-                                                        kv = (s0,s1,s2,s3,c3_out)
-                                                        p = 0
-                                                        for c0_out in [0,1]:
-                                                            for c1_out in [0,1]:
-                                                                for c2_out in [0,1]:
-                                                                    p = p + \
-                                                                        ha_map[(a0,b0)][(s0,c0_out)] * \
-                                                                        fa_map[(a1,b1,c0_out)][(s1,c1_out)] * \
-                                                                        fa_map[(a2,b2,c1_out)][(s2,c2_out)] * \
-                                                                        fa_map[(a3,b3,c2_out)][(s3,c3_out)]
-                                                        v[kv] = p
-                                    out[k] = v
+    for A in range(16):
+        for B in range(16):
+            a0 = A & 1
+            a1 = (A>>1) & 1
+            a2 = (A>>2) & 1
+            a3 = (A>>3) & 1
+            b0 = B & 1
+            b1 = (B>>1) & 1
+            b2 = (B>>2) & 1
+            b3 = (B>>3) & 1
+            k = (A,B)
+            v = {}
+            for S in range(32):
+                s0 = S & 1
+                s1 = (S>>1) & 1
+                s2 = (S>>2) & 1
+                s3 = (S>>3) & 1
+                c3_out = (S>>4) & 1
+                kv = S
+                p = 0
+                for c0_out in [0,1]:
+                    for c1_out in [0,1]:
+                        for c2_out in [0,1]:
+                            p = p + \
+                                ha_map[(a0,b0)][(s0,c0_out)] * \
+                                fa_map[(a1,b1,c0_out)][(s1,c1_out)] * \
+                                fa_map[(a2,b2,c1_out)][(s2,c2_out)] * \
+                                fa_map[(a3,b3,c2_out)][(s3,c3_out)]
+                v[kv] = p
+            out[k] = v
     return(out)
 
 def six_bit_adder(ha_map,fa_map):
@@ -420,3 +423,20 @@ def gen_paper_plots():
 
 # gen_paper_plots()
 
+"""Plots the distribution of sums of the 4bit adder for two specific inputs"""
+alpha = 0
+beta = 0.1
+a = 3
+b = 4
+ha_map = half_adder(pnand(alpha,beta),pnor(alpha,beta),pnot(alpha,beta))
+fa_map = full_adder(ha_map,pnor(alpha,beta),pnot(alpha,beta))
+fb_map = four_bit_adder(ha_map,fa_map)
+
+key = (a & 1, (a>>1) & 1, (a>>2) & 1, (a>>3) & 1,b & 1, (b>>1) & 1, (b>>2) & 1, (b>>3) & 1)
+hist = dict(sorted({ k: v for (k,v) in fb_map[(a,b)].items() }.items()))
+
+plt.bar(hist.keys(), hist.values())
+plt.xlabel(r'sum')
+plt.ylabel('P(sum|a={0},b={1})'.format(a,b))
+plt.title(r'Probability Distribution over sum of {0} and {1} ($\alpha$={2},$\beta$={3})'.format(a,b,alpha,beta))
+plt.show()
