@@ -65,9 +65,9 @@ where the first line follows from the law of total probability, the second line 
 
 \paragraph{Noisy $4$-bit Adders} Finally, using (\ref{eq:noisy_half_adder}) and (\ref{eq:noisy_full_adder}), we can compute the marginal distribution over the output $S:=s_0s_1s_2s_3\cout^3$ of a $4$-bit adder of $A$ and $B$ by summing over all possible values of $\cout^0$, $\cout^1$ and $\cout^2$. We have
 \begin{align}
-    P(S|A,B) & = \sum_{\cout^0 \in \Bin} \sum_{\cout^1\in\Bin} \sum_{\cout^2\in\Bin} P(s_0,s_1,s_2,s_3,\cout^0,\cout^1,\cout^2,\cout^3|A,B) \nonumber                                                          \\
-             & = \sum_{\cout^0 \in \Bin} \sum_{\cout^1\in\Bin} \sum_{\cout^2\in\Bin} P(s_0,\cout^0|a_0,b_0)P(s_1,\cout^1|a_1,b_1,\cout^0)\cdots P(s_3,\cout^3|a_1,b_1,\cout^2) \nonumber                       \\
-             & = \sum_{\cout^0 \in \Bin} \sum_{\cout^1\in\Bin} \sum_{\cout^2\in\Bin} q_\ha(a_0,b_0,s_0,\cout^0)\cdot q_\fa(a_1,b_1,\cout^0,s_1,\cout^1)\cdots q_\fa(a_1,b_1,\cout^2,s_3,\cout^3) \nonumber \,,
+    P(S|A,B) & = \sum_{\cout^0 \in \Bin} \sum_{\cout^1\in\Bin} \sum_{\cout^2\in\Bin} P(s_0,s_1,s_2,s_3,\cout^3,\cout^0,\cout^1,\cout^2|A,B) \nonumber                                                          \\
+             & = \sum_{\cout^0 \in \Bin} \sum_{\cout^1\in\Bin} \sum_{\cout^2\in\Bin} P(s_0,\cout^0|a_0,b_0)P(s_1,\cout^1|a_1,b_1,\cout^0)\cdots P(s_3,\cout^3|a_3,b_3,\cout^2) \nonumber                       \\
+             & = \sum_{\cout^0 \in \Bin} \sum_{\cout^1\in\Bin} \sum_{\cout^2\in\Bin} q_\ha(a_0,b_0,s_0,\cout^0)\cdot q_\fa(a_1,b_1,\cout^0,s_1,\cout^1)\cdots q_\fa(a_3,b_3,\cout^2,s_3,\cout^3) \nonumber \,,
 \end{align}
 where the second line follows from the (chain) directed graphical network structure of the 4-bit adder. Again, we use the  pre-computed functions $q_\ha$ and $q_\fa$ for a fast computation of the output distribution of the 4-bit adder.
 
