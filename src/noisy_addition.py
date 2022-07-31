@@ -56,7 +56,8 @@ def half_adder(nand_map,nor_map,not_map):
                         for e in [0,1]:
                             for f in [0,1]:
                                 for g in [0,1]:
-                                    p = p + nand_map[(a,b)][e]*nor_map[(a,b)][d]*not_map[e][c_out]*not_map[d][f]*nand_map[(e,f)][g]*not_map[g][s]
+                                    p = p + nand_map[(a,b)][e] * nor_map[(a,b)][d] * not_map[e][c_out] * \
+                                            not_map[d][f] * nand_map[(e,f)][g] * not_map[g][s]
                     v[kv] = p
             out[k] = v
     return out
@@ -77,7 +78,8 @@ def full_adder(ha_map,nor_map,not_map):
                         for e in [0,1]:
                             for f in [0,1]:
                                 for g in [0,1]:
-                                    p = p + ha_map[(a,b)][(d,e)]*ha_map[(d,c_in)][(s,f)]*nor_map[(e,f)][g]*not_map[g][c_out] 
+                                    p = p + ha_map[(a,b)][(d,e)] * ha_map[(d,c_in)][(s,f)] * \
+                                            nor_map[(e,f)][g] * not_map[g][c_out] 
                       v[kv] = p
                 out[k] = v
     return out
@@ -170,7 +172,7 @@ def remap_adder_map(fb_map):
             A[s][a*shift+b] = p
     return A
 
-def plot_basic_logic(alpha=0,d=4):
+def plot_basic_logic(alpha=0):
     """Plots the probability distributions of basic logic functions"""
     beta = np.linspace(0, 0.5, 100)
     plt.plot(beta, [pnand(alpha,b)[(0,0)][1] for b in beta], linestyle='-', linewidth=2.5, marker='', color='red')
