@@ -64,11 +64,11 @@ Every computer is an electric device which changes the state of its memory (i.e.
     \caption{{\bf (Left)} Logic circuit design of a half-adder function in terms of NAND, NOR and NOT gates that computes the sum of two binary numbers $a \in \Bin$ and $b \in \Bin$ where $s$ is the sum of $a$ and $b$ and $\cout$ captures the carry-bit indicating an overflow (i.e., if $a$ and $b$ are both $1$, then $s=0$ and $\cout=1$). {\bf (Right)} The logical equivalent of the half-adder with the values for all intermediate results $d \in \Bin$, $e \in \Bin$, $f \in \Bin$, and $g \in \Bin$ for every possible list of (binary) input values. Note that $s = a \oplus b$ and $\cout = a \land b$. \label{fig:half-adder}}
 \end{figure}
 
-We will focus on one operation of the ALU that is central to all operations namely {\em addition}. Depending on the native bandwidth of the CPU, this includes the addition of two $4$-, $8$-, $16$-, $32$- or even $64$-bit numbers provided in registers. As each number is represented by bits, we will denote the two inputs to addition $A=a_0a_1a_2a_3\cdots a_n$ and $B=b_0b_1b_2b_3\cdots b_n$, respectively. The addition of $A$ and $B$ is performed in a pipeline of $n$ steps:
+We will focus on one operation of the ALU that is central to all operations namely {\em addition}. Depending on the native bandwidth of the CPU, this includes the addition of two $4$-, $8$-, $16$-, $32$- or even $64$-bit numbers provided in registers. As each number is represented by bits, we will denote the two inputs to addition $A=a_0a_1a_2a_3\cdots a_{n-1}$ and $B=b_0b_1b_2b_3\cdots b_{n-1}$, respectively. The addition of $A$ and $B$ is performed in a pipeline of $n$ steps:
 \begin{enumerate}
     \item {\bf Half-Adder}. First, $a_0$ and $b_0$ get added according to the rules of binary addition resulting in a sum bit $s_0$ as well as a carry-out bit $\cout^0$.
     \item {\bf Full-Adder}. Second, $a_1$, $b_1$ and $\cout^0$ get added according to the rules of binary addition with a carry-in bit $\cin^1=\cout^0$ resulting in the sum bit $s_1$ as well as the carry-out bit $\cout^1$.
-    \item {\bf Ripple-Carry Adder}. This sequence is repeated until the $n$th position given the bit string $s_0s_1s_2s_3\cdots s_n\cout^n$ which is the $(n+1)$-bit answer of the addition of $A$ and $B$.
+    \item {\bf Ripple-Carry Adder}. This sequence is repeated until the $n$th position given the bit string $s_0s_1s_2s_3\cdots s_{n-1}\cout^{n-1}$ which is the $(n+1)$-bit answer of the addition of $A$ and $B$.
 \end{enumerate}
 
 
