@@ -12,11 +12,11 @@ using Formatting
 #################################################################
 
 """
-    pnand(α,β)
+    pnand(α, β)
 
 Returns a dictionary that computes the probability distribution of a probabilistic NAND gate with error probablisities α and β (both of which should be ∈[0,1])
 """
-function pnand(α,β)
+function pnand(α, β)
     return (Dict{Tuple{UInt8,UInt8},Dict{UInt8,Float64}}(
         (0,0)   => Dict{UInt8,Float64}(0 => α*α,                1 => 1 - α*α),
         (0,1)   => Dict{UInt8,Float64}(0 => α*(1 - β),          1 => 1 - α*(1 - β)),
@@ -26,11 +26,11 @@ function pnand(α,β)
 end
 
 """
-    pnor(α,β)
+    pnor(α, β)
 
 Returns a dictionary that computes the probability distribution of a probabilistic NOR gate with error probablisities α and β (both of which should be ∈[0,1])
     """
-function pnor(α,β)
+function pnor(α, β)
     return (Dict{Tuple{UInt8,UInt8},Dict{UInt8,Float64}}(
         (0,0)   => Dict{UInt8,Float64}(0 => 1 - (1 - α)*(1 - α),    1 => (1 - α)*(1 - α)),
         (0,1)   => Dict{UInt8,Float64}(0 => 1 - (1 - α)*β,          1 => (1 - α)*β),
@@ -40,11 +40,11 @@ function pnor(α,β)
 end
 
 """
-    pnot(α,β)
+    pnot(α, β)
 
 Returns a dictionary that computes the probability distribution of a probabilistic NOT gate with error probablisities α and β (both of which should be ∈[0,1])
 """
-function pnot(α,β)
+function pnot(α, β)
     return (Dict{UInt8,Dict{UInt8,Float64}}(
         0   => Dict{UInt8,Float64}(0 => α,      1 => 1-α),
         1   => Dict{UInt8,Float64}(0 => 1 - β,  1 => β)
@@ -52,9 +52,9 @@ function pnot(α,β)
 end
 
 """
-    half_adder(nand,nor,not)
+    half_adder(nand, nor, not)
 
-Returns a dictionary that computes the probability distribution of a probabilistic half-adder (based on probabilistic `nand`, `nor` and `not` gates).
+Returns a dictionary that computes the probability distribution of a probabilistic half-adder (based on probabilistic `nand`, `nor` and `not` gates)
 """
 function half_adder(nand::Dict{Tuple{UInt8,UInt8},Dict{UInt8,Float64}},
                     nor::Dict{Tuple{UInt8,UInt8},Dict{UInt8,Float64}},
@@ -84,9 +84,9 @@ function half_adder(nand::Dict{Tuple{UInt8,UInt8},Dict{UInt8,Float64}},
 end
 
 """
-    full_adder(ha,nor,not)
+    full_adder(ha, nor, not)
 
-Returns a dictionary that computes the probability distribution of a probabilistic full-adder (based on probabilistic `ha` (half-adder), `nor` and `not` gates).
+Returns a dictionary that computes the probability distribution of a probabilistic full-adder (based on probabilistic `ha` (half-adder), `nor` and `not` gates)
 """
 function full_adder(ha::Dict{Tuple{UInt8,UInt8},Dict{Tuple{UInt8,UInt8},Float64}},
                     nor::Dict{Tuple{UInt8,UInt8},Dict{UInt8,Float64}},
@@ -117,7 +117,7 @@ function full_adder(ha::Dict{Tuple{UInt8,UInt8},Dict{Tuple{UInt8,UInt8},Float64}
 end
 
 """
-    full_adder(ha,nor,not)
+    four_bit_adder(ha, fa)
 
 Returns a dictionary that computes the probability distribution of a probabilistic 4bit-adder (based on probabilistic `ha` (half-adder), `fa` (full-adder) gates).
 """
@@ -158,16 +158,44 @@ function four_bit_adder(ha::Dict{Tuple{UInt8,UInt8},Dict{Tuple{UInt8,UInt8},Floa
     return(D)
 end
 
+"""
+    check_distribution(p_map)
+
+Returns true, if the distribution object is a true normalizing distribution for all keys of `p_map`
+"""
+function check_distribution(p_map=full_adder(half_adder(pnand(0,0),pnor(0,0),pnot(0,0)),pnor(0,0),pnot(0,0)))
+    for v in values(p_map)
+        if (abs(sum(values(v))-1.0) > 1e-4)
+            return (false)
+        end
+    end
+    return(true)
+end
+
+"""
+    print_distribution(p, title="")
+
+Prints the probabilistic map `p` on the screen with title line `title`
+"""
+function print_distribution(p_map=half_adder(pnand(0,0),pnor(0,0),pnot(0,0)), title="")
+    if (length(title) > 0)
+        println(title)
+    end
+    for (k,v) in p_map
+        println(k, ": ", v)
+    end
+end
+
 #################################################################
 # Basic plotting code
 #################################################################
 
 """
-    plot_one_valued_logic(α)
+    plot_one_valued_logic(f, α=0)
 
-Plots the probability distribution of a one-valued logic function
+Plots the probability distribution of a one-valued logic function `f` over all values of β and the value of `α`
 """
-function plot_one_valued_logic(f, α=0)
+function plot_one_valued_logic(f,α=0)
     colors = [:red, :green, :blue, :black]
     β_range = range(0, 0.5, length=100)
     plt = plot(xlims = (0,0.5), ylims = (0,1), grid=true)
@@ -178,16 +206,16 @@ function plot_one_valued_logic(f, α=0)
     end
     xlabel!(plt, "β", fontsize=12)
     ylabel!(plt, sprintf1("P(out=1|inp,α=%5.2f)", α), fontsize=12, )
-    title!(plt, sprintf1("Probability Distribution for α=%5.2f", α), fontsize=12)
+    title!(plt, sprintf1("Probability P(1|inp) for α=%5.2f", α), fontsize=12)
     return (plt)
 end
 
 """
-plot_two_valued_logic(α)
+    plot_two_valued_logic(f, inpu=(0,0), α=0, plot_title=true)
 
-Plots the probability distribution of a two-valued logic function for a fixed input
+Plots the probability distribution of a two-valued logic function `f` for a fixed input `inp` over all values of β and the value of `α`
 """
-function plot_two_valued_logic(f, inp=(0,0), α=0)
+function plot_two_valued_logic(f, inp=(0,0), α=0, plot_title=true)
     colors = [:red, :green, :blue, :black]
     β_range = range(0, 0.5, length=100)
     plt = plot(xlims = (0,0.5), ylims = (0,1), grid=true)
@@ -199,54 +227,55 @@ function plot_two_valued_logic(f, inp=(0,0), α=0)
         i += 1
     end
     xlabel!(plt, "β", fontsize=12)
-    ylabel!(plt, sprintf1("P(out|inp=$inp,α=%5.2f)", α), fontsize=12, )
-    title!(plt, sprintf1("Probability Distribution for α=%5.2f and Input $inp", α), fontsize=12)
+    ylabel!(plt, sprintf1("P(out|inp=$inp,α=%5.2f)", α), fontsize=12)
+    if (plot_title)
+        title!(plt, sprintf1("Probability Distribution for α=%5.2f and Input $inp", α), fontsize=12)
+    end
     return (plt)
 end
 
 
 
-gr()
-# display(plot_one_valued_logic(pnot, 0.1))
-# plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (0,0)) |> dislpay
-# plot_two_valued_logic((α,β) -> full_adder(half_adder(pnand(α,β),pnor(α,β),pnot(α,β)),pnor(α,β),pnot(α,β)), (0,0,1)) |> display
+# # plot basic logic functions
+# gr()
+# plot_one_valued_logic(pnand, 0.1) |> display 
 # readline()
 
-anim = @animate for α ∈ range(0,0.5, length=100)
-    plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (1,1), α)
+# # plot half adder logic functions
+# gr()
+# p1 = plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (0,0))
+# p2 = plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (1,0))
+# p3 = plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (0,1))
+# p4 = plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (1,1))
+# plot(p1, p2, p3, p4, layout=(2,2), size=(1200,1000)) |> display
+# readline()
+
+# # plot half adder logic functions
+# gr()
+# anim = @animate for α ∈ range(0,0.5, length=100)
+#     p1 = plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (0,0), α, false)
+#     p2 = plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (1,0), α, false)
+#     p3 = plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (0,1), α, false)
+#     p4 = plot_two_valued_logic((α,β) -> half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), (1,1), α, false)
+#     plot(p1, p2, p3, p4, layout=(2,2), size=(1200,1000))
+# end
+# gif(anim, "anim_fps15.gif", fps = 15)
+
+# # prints and checks the probability distributions on screen
+# println(check_distribution(full_adder(half_adder(pnand(0.1,0.2),pnor(0.1,0.2),pnot(0.1,0.2)),pnor(0.1,0.2),pnot(0.1,0.2))))
+# print_distribution()
+
+gr()
+x = 6
+y = 4
+α = 0
+anim = @animate for β ∈ range(0,0.5, length=100)
+    ha = half_adder(pnand(α,β),pnor(α,β),pnot(α,β))
+    fa = full_adder(ha,pnor(α,β),pnot(α,β))
+    fb = four_bit_adder(ha, fa)
+    bar(map(kv->kv[2], sort([(k,v) for (k,v) in fb[(x,y)]], by=first)), legend=false)
+    title!(sprintf1("Probability Distribution over $x + $y for β=%5.2f", β), fontsize=12)
+    xlabel!("sum of $x + $y")
 end
 gif(anim, "anim_fps15.gif", fps = 15)
 
-# function print_map(m, s)
-#     println(s)
-#     for (k,v) in m
-#         println(k, ": ", v)
-#     end
-# end
-
-# α = 0
-# β = 0
-# nand_map = pnand(α,β)
-# nor_map = pnor(α,β)
-# not_map = pnot(α,β)
-# ha_map = half_adder(nand_map,nor_map,not_map) 
-# fa_map = full_adder(ha_map,nor_map,not_map) 
-# fb_map = four_bit_adder(ha_map,fa_map) 
-
-# print_map(nand_map, "NAND")
-# print_map(nor_map,  "NOR")
-# print_map(not_map,  "NOT")
-# print_map(ha_map,   "Half Adder")
-# print_map(fa_map,   "Full Adder")
-# print_map(fb_map,   "4-bit Adder")
-
-# α = 0
-# @time for β in 0.0:1e-4:1.0
-#     β = 0.1
-#     nand_map = pnand(α,β)
-#     nor_map = pnor(α,β)
-#     not_map = pnot(α,β)
-#     ha_map = half_adder(nand_map,nor_map,not_map) 
-#     fa_map = full_adder(ha_map,nor_map,not_map)
-#     fb_map = four_bit_adder(ha_map,fa_map)
-# end
