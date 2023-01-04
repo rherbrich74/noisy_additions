@@ -14,13 +14,15 @@ using Formatting
 
 Plots the probability distribution of a one-valued logic function `f` over all values of β and the value of `α`
 """
-function plot_one_valued_logic(f,α=0)
+function plot_one_valued_logic(f; α=0)
     colors = [:red, :green, :blue, :black]
     β_range = range(0, 0.5, length=100)
     plt = plot(xlims = (0,0.5), ylims = (0,1), grid=true)
     i = 1
     for key in keys(f(α,0))
-        plot!(plt, β_range, map(β -> f(α,β)[key][1], β_range), linecolor=colors[i], linewidth=2.5, label="inp=$key", fontsize=10)
+        plot_key = (Int(key[1]),Int(key[2]))
+        plot!(plt, β_range, map(β -> f(α,β)[key][1], β_range), 
+              linecolor=colors[i], linewidth=2.5, label="inp=$plot_key", fontsize=10, legend=:bottomright)
         i += 1
     end
     xlabel!(plt, "β", fontsize=12)
@@ -34,7 +36,7 @@ end
 
 Plots the probability distribution of a two-valued logic function `f` for a fixed input `inp` over all values of β and the value of `α`
 """
-function plot_two_valued_logic(f, inp=(0,0), α=0, plot_title=true)
+function plot_two_valued_logic(f, inp=(0,0); α=0, plot_title=true)
     colors = [:red, :green, :blue, :black]
     β_range = range(0, 0.5, length=100)
     plt = plot(xlims = (0,0.5), ylims = (0,1), grid=true)
@@ -42,7 +44,9 @@ function plot_two_valued_logic(f, inp=(0,0), α=0, plot_title=true)
     value_keys = keys(f(α,0)[ks[1]])
     i = 1
     for val in value_keys
-        plot!(plt, β_range, map(β -> f(α,β)[inp][val], β_range), linecolor=colors[i], linewidth=2.5, label="P($val | inp=$inp)", fontsize=10)
+        val_plot = (Int(val[1]),Int(val[2]))
+        plot!(plt, β_range, map(β -> f(α,β)[inp][val], β_range), 
+              linecolor=colors[i], linewidth=2.5, label="P($val_plot | inp=$inp)", fontsize=10, legend=:bottomright)
         i += 1
     end
     xlabel!(plt, "β", fontsize=12)
@@ -77,7 +81,7 @@ function plot_two_valued_error(f; α=0, legend_pos=:bottomright)
     plt = plot(xlims = (0,0.5), ylims = (0,1), grid=true)
     i = 1
     for key in collect(keys(f(α,0)))
-        plot_key = key
+        plot_key = (length(key) == 3) ? (Int(key[1]),Int(key[2]),Int(key[3])) : (Int(key[1]),Int(key[2]))
         plot!(plt, β_range, map(β -> 1 - f(α,β)[key][true_output[key]], β_range), 
               legend=legend_pos,
               ylims=(0,1),
@@ -92,12 +96,15 @@ function plot_two_valued_error(f; α=0, legend_pos=:bottomright)
 end
 
 
-# # plot basic logic functions
+
+
+
+# plot basic logic functions
 gr()
 anim = @animate for α ∈ range(0,0.5, length=100)
-    plot_one_valued_logic(pnand, α) 
+    plot_one_valued_logic(pnand, α=α) 
 end
-gif(anim, "anim_basic_correct_fps15.gif", fps = 15)
+gif(anim, "anim_basic_correct_fps10.gif", fps = 10)
 
 # plot half adder logic functions
 gr()
@@ -106,7 +113,7 @@ anim = @animate for α ∈ range(0,0.5, length=100)
         half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), α=α)
     
 end
-gif(anim, "anim_ha_error_fps15.gif", fps = 15)
+gif(anim, "anim_ha_error_fps10.gif", fps = 10)
 
 # plot full adder logic functions
 gr()
@@ -115,14 +122,33 @@ anim = @animate for α ∈ range(0,0.5, length=100)
         full_adder(half_adder(pnand(α,β),pnor(α,β),pnot(α,β)),pnor(α,β),pnot(α,β)), α=α)
     
 end
-gif(anim, "anim_fa_error_fps15.gif", fps = 15)
+gif(anim, "anim_fa_error_fps10.gif", fps = 10)
+
+# # plot half adder logic functions with psafe
+# gr()
+# anim = @animate for α ∈ range(0,0.5, length=100)
+#     plot_two_valued_error((α,β) ->
+#         psafe(half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), α=α, β=β), α=α)
+    
+# end
+# gif(anim, "anim_ha_error_with_psafe_fps10.gif", fps = 10)
+
+# # plot full adder logic functions with psafe
+# gr()
+# anim = @animate for α ∈ range(0,0.5, length=100)
+#     plot_two_valued_error((α,β) ->
+#         psafe(full_adder(half_adder(pnand(α,β),pnor(α,β),pnot(α,β)),pnor(α,β),pnot(α,β)), α=α, β=β), α=α)
+    
+# end
+# gif(anim, "anim_fa_error_with_psafe_fps10.gif", fps = 10)
+
 
 # plot the error distribution without correction
 gr()
 x = 100
 y = 88
 α = 0
-anim = @animate for β ∈ range(0,0.5, length=100)
+anim = @animate for β ∈ range(0,0.1, length=100)
     β_range = map(i -> β, 1:8)
     ha = map(i -> half_adder(pnand(α,β_range[i]),pnor(α,β_range[i]),pnot(α,β_range[i])),1:8) 
     fa = map(i -> full_adder(ha[i],pnor(α,β_range[i]),pnot(α,β_range[i])),1:8)
@@ -131,7 +157,7 @@ anim = @animate for β ∈ range(0,0.5, length=100)
     title!(sprintf1("Probability Distribution over $x + $y for β=%5.2f", β), fontsize=12)
     xlabel!("sum of $x + $y")
 end
-gif(anim, "anim_100_88_no_decay_fps15.gif", fps = 15)
+gif(anim, "anim_100_88_no_decay_fps10.gif", fps = 10)
 
 
 # plot the error distribution without correction
@@ -139,7 +165,7 @@ gr()
 x = 100
 y = 88
 α = 0
-anim = @animate for β ∈ range(0,0.5, length=100)
+anim = @animate for β ∈ range(0,0.1, length=100)
     β_range = map(i -> β/i, 1:8)
     ha = map(i -> half_adder(pnand(α,β_range[i]),pnor(α,β_range[i]),pnot(α,β_range[i])),1:8) 
     fa = map(i -> full_adder(ha[i],pnor(α,β_range[i]),pnot(α,β_range[i])),1:8)
@@ -148,4 +174,25 @@ anim = @animate for β ∈ range(0,0.5, length=100)
     title!(sprintf1("Probability Distribution over $x + $y for β=%5.2f", β), fontsize=12)
     xlabel!("sum of $x + $y")
 end
-gif(anim, "anim_100_88_linear_decay_fps15.gif", fps = 15)
+gif(anim, "anim_100_88_linear_decay_fps10.gif", fps = 10)
+
+# plot the error distribution without correction
+gr()
+x = 100
+y = 88
+α = 0
+anim = @animate for β ∈ range(0,0.1, length=100)
+    ha = Vector{Dict{Tuple{UInt8,UInt8},Dict{Tuple{UInt8,UInt8},Float64}}}()
+    fa = Vector{Dict{Tuple{UInt8,UInt8,UInt8},Dict{Tuple{UInt8,UInt8},Float64}}}()
+    push!(ha, half_adder(pnand(α,β),pnor(α,β),pnot(α,β)))
+    push!(fa, full_adder(ha[1],pnor(α,β),pnot(α,β)))
+    for i = 2:8
+        push!(ha, psafe(ha[i-1], α=α, β=β))
+        push!(fa, psafe(fa[i-1], α=α, β=β))
+    end
+    fb = eight_bit_adder(ha[1], fa[2:8], x, y)
+    bar(map(kv->kv[2], sort([(k,v) for (k,v) in fb], by=first)), legend=false)
+    title!(sprintf1("Probability Distribution over $x + $y for β=%5.2f", β), fontsize=12)
+    xlabel!("sum of $x + $y")
+end
+gif(anim, "anim_100_88_linear_psafe_decay_fps10.gif", fps = 10)

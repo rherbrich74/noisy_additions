@@ -6,7 +6,8 @@
 
 module Noisy
 
-export pnand, pnor, pnot, half_adder, full_adder, four_bit_adder, eight_bit_adder, check_distribution, print_distribution
+export pnand, pnor, pnot, half_adder, full_adder, four_bit_adder, eight_bit_adder, psafe,
+       check_distribution, print_distribution
 
 """
     pnand(α, β)
@@ -220,6 +221,51 @@ function eight_bit_adder(ha::Dict{Tuple{UInt8,UInt8},Dict{Tuple{UInt8,UInt8},Flo
     end
     return(p_dict)
 end
+
+"""
+    psafe(f; α=0, β=0)
+
+Returns an "safer" probability distribution for a given probabilisitic binary map `f` by quadrauping it and using pnor gates with parameters `α` and `β` to add enough redundancy
+"""
+function psafe(f_map; α=0, β=0)
+    nor_map = pnor(α,β)
+    out_map = Dict{keytype(f_map),valtype(f_map)}()
+    for (k,v) in f_map
+        p_map = Dict{keytype(valtype(f_map)),valtype(valtype(f_map))}()
+        if (length(v) == 2)
+            println("Not supported for mappings to ", length(v), "values")
+        elseif (length(v) == 4)
+            for out = 0:3
+                o1 = out & 1; out >>= 1
+                o2 = out & 1
+                p = 0
+                for marginal = 0:4095
+                    n11 = marginal & 1; marginal >>= 1
+                    n12 = marginal & 1; marginal >>= 1
+                    n13 = marginal & 1; marginal >>= 1
+                    n14 = marginal & 1; marginal >>= 1
+                    d1 = marginal & 1; marginal >>= 1
+                    e1 = marginal & 1; marginal >>= 1
+                    n21 = marginal & 1; marginal >>= 1
+                    n22 = marginal & 1; marginal >>= 1
+                    n23 = marginal & 1; marginal >>= 1
+                    n24 = marginal & 1; marginal >>= 1
+                    d2 = marginal & 1; marginal >>= 1
+                    e2 = marginal & 1
+                    p = p + f_map[k][(n11,n21)] * f_map[k][(n12,n22)] * 
+                            f_map[k][(n13,n23)] * f_map[k][(n14,n24)] * 
+                            nor_map[(n11,n12)][d1] * nor_map[(n13,n14)][e1] * nor_map[(d1,e1)][o1] * 
+                            nor_map[(n21,n22)][d2] * nor_map[(n23,n24)][e2] * nor_map[(d2,e2)][o2] 
+                end
+                p_map[(o1,o2)] = p
+            end
+        else
+            println("Not supported for mappings to ", length(v), "values")
+        end
+        out_map[k] = p_map
+    end
+    return out_map
+end 
 
 """
     check_distribution(p_map)
