@@ -111,7 +111,6 @@ gr()
 anim = @animate for α ∈ range(0,0.5, length=100)
     plot_two_valued_error((α,β) ->
         half_adder(pnand(α,β),pnor(α,β),pnot(α,β)), α=α)
-    
 end
 gif(anim, "anim_ha_error_fps10.gif", fps = 10)
 
@@ -120,7 +119,6 @@ gr()
 anim = @animate for α ∈ range(0,0.5, length=100)
     plot_two_valued_error((α,β) ->
         full_adder(half_adder(pnand(α,β),pnor(α,β),pnot(α,β)),pnor(α,β),pnot(α,β)), α=α)
-    
 end
 gif(anim, "anim_fa_error_fps10.gif", fps = 10)
 
@@ -160,7 +158,7 @@ end
 gif(anim, "anim_100_88_no_decay_fps10.gif", fps = 10)
 
 
-# plot the error distribution without correction
+# plot the error distribution with linearly decaying error rate correction
 gr()
 x = 100
 y = 88
@@ -176,7 +174,7 @@ anim = @animate for β ∈ range(0,0.1, length=100)
 end
 gif(anim, "anim_100_88_linear_decay_fps10.gif", fps = 10)
 
-# plot the error distribution without correction
+# plot the error distribution with redundancy correction
 gr()
 x = 100
 y = 88
@@ -196,3 +194,4 @@ anim = @animate for β ∈ range(0,0.1, length=100)
     xlabel!("sum of $x + $y")
 end
 gif(anim, "anim_100_88_linear_psafe_decay_fps10.gif", fps = 10)
+
